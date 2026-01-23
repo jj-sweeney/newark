@@ -47,7 +47,11 @@ Now there are 496 forward (RA) and 496 reverse (RB) files in ./data/
 
 Example execution in home/maccamp/newark/data
 
+Changes in partitions, checking with /opt/hpccf/bin/slurm-show-resources.py --full 
+
 ```{sh, eval=FALSE}
-head ../metadata/sequence-names.tsv  > align-10.tsv
+head -n 11 ../metadata/sequence-names.tsv | tail -n 10 > align-10.tsv
 bash ../100.1-do-align.sh align-10.tsv /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz
 ```
+
+This is working.  Joe - you can create a genomes/siphateles directory and build indices there and align!

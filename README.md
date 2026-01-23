@@ -9,7 +9,7 @@ For analyses of Newar Tui Chub _Siphateles newarkensis_
 .gitignore - comments out subdirs outputs genome data bams and any *html file
 
 ## Directories
-bams - for bams if desired
+bams - for bams if desired 
 data - for data
 genome - for reference genome and indices
 metadata - for metadata 
