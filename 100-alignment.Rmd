@@ -23,22 +23,31 @@ Our sequences are labeled like this:
 plate-9_RA_GGGTGTTCTATGCAGG.fastq
 plate-9_RB_GGGTGTTCTATGCAGG.fastq
 
+So to recreate the individual sequence names I'm going to do this.
+
 ```{r}
 meta %>% mutate %>% mutate(Forward=paste0("plate-",PlateNumber,"_RA_GG",`Sample/Well Barcode (RAD Adaptor Seq)`,"TGCAGG.fastq")) %>%
   mutate(Reverse=paste0("plate-",PlateNumber,"_RB_GG",`Sample/Well Barcode (RAD Adaptor Seq)`,"TGCAGG.fastq")) %>%
   select(Forward, Reverse, Ind) %>% write_tsv("metadata/sequence-names.tsv") 
 ```
 
-To set up alignment on FARM, we can do this:
-
+To set up alignment on FARM, we can symlink data from my home directory like so:
 
 ```{sh, eval=FALSE}
 git clone https://github.com/jj-sweeney/newark
 cd newark
 mkdir data
 cd data
-cut -f 1 ../metadata/meta01222025.csv -d ',' | while read line; do ln -s ~/fish-lake/data/raw/split/$line.fastq ./ ; done;
-
+cut -f 1 ../metadata/sequence-names.tsv  | while read line; do ln -s /home/maccamp/fish-lake/data/align/$line ./ ; done;
+cut -f 2 ../metadata/sequence-names.tsv  | while read line; do ln -s /home/maccamp/fish-lake/data/align/$line ./ ; done;
 ```
 
+
+Now there are 496 forward (RA) and 496 reverse (RB) files in ./data/ 
+
+Example execution in home/maccamp/newark/data
+
+```{sh, eval=FALSE}
+head ../metadata/sequence-names.tsv  > align-10.tsv
+bash ../100.1-do-align.sh align-10.tsv /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz
 ```
