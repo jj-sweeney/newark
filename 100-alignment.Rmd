@@ -1,0 +1,20 @@
+---
+title: "100-alignment"
+output: html_document
+date: "2026-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+This file is for making notes about alignment and checking alignment success. I've put a basic alignment script that you can execute in a directory to align files.
+
+```{r}
+meta<-read_csv("metadata/meta01222025.csv")
+meta %>% group_by(Species, `Tributary/Collection Location`) %>% summarize(Count=n())
+```
