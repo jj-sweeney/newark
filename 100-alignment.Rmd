@@ -18,3 +18,27 @@ This file is for making notes about alignment and checking alignment success. I'
 meta<-read_csv("metadata/meta01222025.csv")
 meta %>% group_by(Species, `Tributary/Collection Location`) %>% summarize(Count=n())
 ```
+
+Our sequences are labeled like this:
+plate-9_RA_GGGTGTTCTATGCAGG.fastq
+plate-9_RB_GGGTGTTCTATGCAGG.fastq
+
+```{r}
+meta %>% mutate %>% mutate(Forward=paste0("plate-",PlateNumber,"_RA_GG",`Sample/Well Barcode (RAD Adaptor Seq)`,"TGCAGG.fastq")) %>%
+  mutate(Reverse=paste0("plate-",PlateNumber,"_RB_GG",`Sample/Well Barcode (RAD Adaptor Seq)`,"TGCAGG.fastq")) %>%
+  select(Forward, Reverse, Ind) %>% write_tsv("metadata/sequence-names.tsv") 
+```
+
+To set up alignment on FARM, we can do this:
+
+
+```{sh, eval=FALSE}
+git clone https://github.com/jj-sweeney/newark
+cd newark
+mkdir data
+cd data
+cut -f 1 ../metadata/meta01222025.csv -d ',' | while read line; do ln -s ~/fish-lake/data/raw/split/$line.fastq ./ ; done;
+
+```
+
+```
