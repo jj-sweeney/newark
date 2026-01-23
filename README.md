@@ -1,5 +1,5 @@
 # newark
-For analyses of Newar Tui Chub _Siphateles newarkensis_
+For analyses of Newark Tui Chub _Siphateles newarkensis_
 
 ## Files
 100-alignment.Rmd - description of alignment and sequencing success      
