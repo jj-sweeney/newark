@@ -27,6 +27,7 @@ do
 
        echo "#!/bin/bash -l
        module load bwa/0.7.17
+       module load samtools
        bwa mem $ref ${c1} ${c2} | samtools view -Sb | samtools sort - -o ${c3}.sort.bam
        samtools index ${c3}.sort.bam
        samtools view -f 0x2 -b ${c3}.sort.bam | samtools rmdup - ${c3}.sort.flt.bam
