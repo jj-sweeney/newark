@@ -19,9 +19,7 @@ meta<-read_csv("metadata/meta01222025.csv")
 meta %>% group_by(Species, `Tributary/Collection Location`) %>% summarize(Count=n())
 ```
 
-Our sequences are labeled like this:
-plate-9_RA_GGGTGTTCTATGCAGG.fastq
-plate-9_RB_GGGTGTTCTATGCAGG.fastq
+Our sequences are labeled like this: plate-9_RA_GGGTGTTCTATGCAGG.fastq plate-9_RB_GGGTGTTCTATGCAGG.fastq
 
 So to recreate the individual sequence names I'm going to do this.
 
@@ -34,7 +32,7 @@ meta %>% mutate %>% mutate(Forward=paste0("plate-",PlateNumber,"_RA_GG",`Sample/
 To set up alignment on FARM, we can symlink data from my home directory like so:
 
 ```{sh, eval=FALSE}
-git clone https://github.com/jj-sweeney/newark
+git clone https://github.com/jj-sweeney/newark 
 cd newark
 mkdir data
 cd data
@@ -42,23 +40,22 @@ cut -f 1 ../metadata/sequence-names.tsv  | while read line; do ln -s /home/macca
 cut -f 2 ../metadata/sequence-names.tsv  | while read line; do ln -s /home/maccamp/fish-lake/data/align/$line ./ ; done;
 ```
 
-
-Now there are 496 forward (RA) and 496 reverse (RB) files in ./data/ 
+Now there are 496 forward (RA) and 496 reverse (RB) files in ./data/
 
 Example execution in home/maccamp/newark/data
 
-Changes in partitions, checking with /opt/hpccf/bin/slurm-show-resources.py --full 
+Changes in partitions, checking with /opt/hpccf/bin/slurm-show-resources.py --full
 
 ```{sh, eval=FALSE}
 head -n 11 ../metadata/sequence-names.tsv | tail -n 10 > align-10.tsv
-bash ../100.1-do-align.sh align-10.tsv /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz
+bash ../100.1-do-align.sh align-10.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
 ```
 
-This is working.  Joe - you can create a genomes/siphateles directory and build indices there and align!
+This is working. Joe - you can create a genomes/siphateles directory and build indices there and align!
 
 01252026 adding some more notes.
 
-On farm I have the job checking set up wiht an alias, 'sq' in my .bash_profile 'alias sq="squeue -u $(whoami)"`.    
+On farm I have the job checking set up wiht an alias, 'sq' in my .bash_profile 'alias sq="squeue -u \$(whoami)"\`.
 
 in newark/data on farm:
 
