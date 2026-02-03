@@ -62,26 +62,26 @@ On farm I have the job checking set up wiht an alias, 'sq' in my .bash_profile '
 in newark/data on farm:
 
 ```{sh, eval=FALSE}
-cat *.stats > align-10.csv
+cat *.stats > align-496.csv
 ```
 
 moving locally to outputs/100
 
 ```{r}
-align<-read_csv("/Users/joesweeney/Desktop/outputs/100/align-10.csv", col_names = c("Ind","Reads2","Dedup2","Coverage2"))
+align<-read_csv("/Users/joesweeney/Desktop/outputs/100/align-496.csv", col_names = c("Ind","Reads2","Dedup2","Coverage2"))
 # to compare against our previous alignments, I imagine this will be more instructive with the Siphateles genome
 # Data frame could also be made tidy with "reference genome option"
 
-align10<-meta %>% left_join(align) %>% arrange(-Dedup2) %>% filter(Dedup2 > 0)
+align496<-meta %>% left_join(align) %>% arrange(-Dedup2) %>% filter(Dedup2 > 0)
 
 # A tidy version to compare to two different references Here they will be the same but just an idea of something to try.
 meta1<-meta %>% mutate(ReferenceGenome="Gila")
-meta2<-meta %>% select(-Reads, -Dedup, -Coverage) %>% left_join(read_csv("/Users/joesweeney/Desktop/outputs/100/align-10.csv", col_names = c("Ind","Reads","Dedup","Coverage"))) %>% mutate(ReferenceGenome="Siphateles")
+meta2<-meta %>% select(-Reads, -Dedup, -Coverage) %>% left_join(read_csv("/Users/joesweeney/Desktop/outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Coverage"))) %>% mutate(ReferenceGenome="Siphateles")
 meta3<-bind_rows(meta1,meta2)
 ```
 
 ```{r}
-ggplot(align10) +
+ggplot(align496) +
   geom_histogram(aes(x=Dedup2, fill=`Tributary/Collection Location`)) +
   theme_bw() +
   theme(panel.grid=element_blank()) +
