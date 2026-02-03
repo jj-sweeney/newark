@@ -47,9 +47,11 @@ Example execution in home/maccamp/newark/data
 Changes in partitions, checking with /opt/hpccf/bin/slurm-show-resources.py --full
 
 ```{sh, eval=FALSE}
-head -n 11 ../metadata/sequence-names.tsv | tail -n 10 > align-10.tsv
-bash ../100.1-do-align.sh align-10.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
+tail -n 486 ../metadata/sequence-names.tsv > align-486.tsv
+bash ../100.1-do-align.sh align-486.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
 ```
+
+20260203 since first 10 sequences have already been aligned I changed the above code to get the remaining 486
 
 This is working. Joe - you can create a genomes/siphateles directory and build indices there and align!
 
