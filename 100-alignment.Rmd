@@ -47,8 +47,8 @@ Example execution in home/maccamp/newark/data
 Changes in partitions, checking with /opt/hpccf/bin/slurm-show-resources.py --full
 
 ```{sh, eval=FALSE}
-tail -n 486 ../metadata/sequence-names.tsv > align-486.tsv
-bash ../100.1-do-align.sh align-486.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
+tail -n+2 ../metadata/sequence-names.tsv > align-496.tsv
+bash ../100.1-do-align.sh align-496.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
 ```
 
 20260203 since first 10 sequences have already been aligned I changed the above code to get the remaining 486
