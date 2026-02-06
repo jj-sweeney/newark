@@ -51,6 +51,8 @@ tail -n+2 ../metadata/sequence-names.tsv > align-496.tsv
 bash ../100.1-do-align.sh align-496.tsv /home/jsweeney/newark/genomes/GCA_042767315.1_fSipBic1.0.p_genomic.fna.gz
 ```
 
+20260206 changed above code to get all 496 sequences after moving to grp directory 
+
 20260203 since first 10 sequences have already been aligned I changed the above code to get the remaining 486
 
 This is working. Joe - you can create a genomes/siphateles directory and build indices there and align!
