@@ -1,0 +1,41 @@
+---
+title: "101-angsd-basics"
+output: html_document
+date: "2026-02-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+Setting up some examples to work with existing alignments.
+
+I have 10 alignments in data from Cold Creak Reservoir in data. I'll set up some basics.  First getting the metadata.    
+
+```{r}
+align10<-read_csv("outputs/100/align-10.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+meta<-read_csv("metadata/meta01222025.csv")
+m10<-left_join(align10,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam"))
+```
+
+Set up sample names and bamlist.
+
+```{sh, eval=FALSE}
+mkdir bamlists
+```
+
+```{r}
+m10 %>% select(Path) %>% write_tsv("bamlists/m10.bamlist", col_names = FALSE)
+m10 %>% select(GVL_Code) %>% write_tsv("bamlists/m10.names", col_names = FALSE)
+```
+
+The reference genome for these was `/home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz` a large contig is `JAPDVR010000001.1`.       
+
+On farm, can try something like this.
+
+
+
