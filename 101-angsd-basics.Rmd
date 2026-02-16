@@ -107,3 +107,10 @@ ggplot(df) +
   theme(plot.title = element_text(hjust=0.5))
 
 ```
+
+on farm, switching back to main branch
+```{sh, eval=FALSE}
+git fetch
+git branch -v -a
+git switch main
+```
