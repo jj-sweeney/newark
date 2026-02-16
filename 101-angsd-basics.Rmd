@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
 
 ```{r}
 library(tidyverse)
+library(snpR)
 ```
 
 Setting up some examples to work with existing alignments.
@@ -19,7 +20,7 @@ I have 10 alignments in data from Cold Creak Reservoir in data. I'll set up some
 ```{r}
 align10<-read_csv("outputs/100/align-10.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 meta<-read_csv("metadata/meta01222025.csv")
-m10<-left_join(align10,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam"))
+m10<-left_join(align10,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
 ```
 
 Set up sample names and bamlist.
@@ -50,6 +51,7 @@ mkidr outputs/101
 Now I can try some basic angsd-y things. I'll use the module to see if it works.   
 
 ```{sh, eval=FALSE}
+module load angsd
 srun -t 2:00:00 -p bmh --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
 -minInd 9 -bam bamlists/10.bamlist \
 -ref /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz \
@@ -59,3 +61,49 @@ srun -t 2:00:00 -p bmh --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=
 
 ```
 
+	-> Number of sites retained after filtering: 2910 
+
+
+```{sh, eval=FALSE}
+#convert to .vcf
+plink --tped outputs/101/snps-10.tped --tfam outputs/101/snps-10.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
+plink --ped outputs/101/plink-binary.ped --map outputs/101/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101/plink
+
+bgzip outputs/101/plink.vcf
+tabix outputs/101/plink.vcf.gz
+
+bcftools reheader --samples bamlists/10.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+tabix outputs/101/renamed.vcf.gz
+```
+
+Now there is a .vcf file with the SNPs and names by sample names, putting in my outputs/101 locally.    
+
+# snpR
+
+Using "Pop" for convenience, but is sampling location.
+
+```{r}
+snps<-import.snpR.data(genotypes = "outputs/101/renamed.vcf.gz", 
+      sample.meta = m10 %>% select(Pop))
+```
+
+```{r}
+pca<-plot_clusters(snps)
+pca$plots
+```
+
+
+Can pull data frame for plotting from pca object.    
+
+```{r}
+df<-pca$data$pca
+ggplot(df) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
