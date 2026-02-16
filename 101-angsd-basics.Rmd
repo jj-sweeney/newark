@@ -29,13 +29,33 @@ mkdir bamlists
 ```
 
 ```{r}
-m10 %>% select(Path) %>% write_tsv("bamlists/m10.bamlist", col_names = FALSE)
-m10 %>% select(GVL_Code) %>% write_tsv("bamlists/m10.names", col_names = FALSE)
+m10 %>% select(Path) %>% write_tsv("bamlists/10.bamlist", col_names = FALSE)
+m10 %>% select(GVL_Code) %>% write_tsv("bamlists/10.names", col_names = FALSE)
 ```
 
 The reference genome for these was `/home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz` a large contig is `JAPDVR010000001.1`.       
 
 On farm, can try something like this.
 
+```{sh, eval=FALSE}
+git fetch
+git branch -v -a
+git switch angsd-basics
 
+mkdir outputs
+mkidr outputs/101
+```
+
+
+Now I can try some basic angsd-y things. I'll use the module to see if it works.   
+
+```{sh, eval=FALSE}
+srun -t 2:00:00 -p bmh --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
+-minInd 9 -bam bamlists/10.bamlist \
+-ref /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz \
+-r JAPDVR010000001.1 -out outputs/101/snps-10 \
+-minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
+-doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101/snps-10.out 2> outputs/101/snps-10.err &
+
+```
 
