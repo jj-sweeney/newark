@@ -18,9 +18,17 @@ Setting up some examples to work with existing alignments.
 I have 10 alignments in data from Cold Creak Reservoir in data. I'll set up some basics.  First getting the metadata.    
 
 ```{r}
-align10<-read_csv("outputs/100/align-10.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+align10<-read_csv("../outputs/100/align-10.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 meta<-read_csv("metadata/meta01222025.csv")
 m10<-left_join(align10,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
+```
+
+now using all 496 individuals -js20260225
+
+```{r}
+align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+meta<-read_csv("metadata/meta01222025.csv")
+m496<-left_join(align496,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
 ```
 
 Set up sample names and bamlist.
@@ -34,7 +42,14 @@ m10 %>% select(Path) %>% write_tsv("bamlists/10.bamlist", col_names = FALSE)
 m10 %>% select(GVL_Code) %>% write_tsv("bamlists/10.names", col_names = FALSE)
 ```
 
+```{r}
+m496 %>% select(Path) %>% write_tsv("bamlists/496.bamlist", col_names = FALSE)
+m496 %>% select(GVL_Code) %>% write_tsv("bamlists/496.names", col_names = FALSE)
+```
+
 The reference genome for these was `/home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz` a large contig is `JAPDVR010000001.1`.       
+
+The largest contig for the S. bicolor genome is `JBECYN010000001.1` - js20260224
 
 On farm, can try something like this.
 
@@ -52,16 +67,27 @@ Now I can try some basic angsd-y things. I'll use the module to see if it works.
 
 ```{sh, eval=FALSE}
 module load angsd
-srun -t 2:00:00 -p bmh --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
+srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
 -minInd 9 -bam bamlists/10.bamlist \
--ref /home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz \
--r JAPDVR010000001.1 -out outputs/101/snps-10 \
+-ref /home/jsweeney/newark/genomes/genome.fasta \
+-r JBECYN010000001.1 -out outputs/101/snps-10 \
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
 -doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101/snps-10.out 2> outputs/101/snps-10.err &
 
 ```
 
 	-> Number of sites retained after filtering: 2910 
+
+```{sh, eval=FALSE}
+module load angsd
+srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
+-minInd 9 -bam bamlists/496.bamlist \
+-ref /home/jsweeney/newark/genomes/genome.fasta \
+-r JBECYN010000001.1 -out outputs/101/snps-496 \
+-minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
+-doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101/snps-496.out 2> outputs/101/snps-496.err &
+
+```
 
 
 ```{sh, eval=FALSE}
@@ -83,7 +109,7 @@ Now there is a .vcf file with the SNPs and names by sample names, putting in my 
 Using "Pop" for convenience, but is sampling location.
 
 ```{r}
-snps<-import.snpR.data(genotypes = "outputs/101/renamed.vcf.gz", 
+snps<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
       sample.meta = m10 %>% select(Pop))
 ```
 
