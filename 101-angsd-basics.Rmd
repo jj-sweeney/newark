@@ -89,16 +89,19 @@ srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-n
 
 ```
 
+-> Number of sites retained after filtering: 15112
 
 ```{sh, eval=FALSE}
 #convert to .vcf
-plink --tped outputs/101/snps-10.tped --tfam outputs/101/snps-10.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
+module load plink
+plink --tped outputs/101/snps-496.tped --tfam outputs/101/snps-496.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
 plink --ped outputs/101/plink-binary.ped --map outputs/101/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101/plink
-
+module load tabix
 bgzip outputs/101/plink.vcf
 tabix outputs/101/plink.vcf.gz
-
-bcftools reheader --samples bamlists/10.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+module load bcftools
+bcftools reheader --samples bamlists/496.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+module load tabix
 tabix outputs/101/renamed.vcf.gz
 ```
 
@@ -110,7 +113,7 @@ Using "Pop" for convenience, but is sampling location.
 
 ```{r}
 snps<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
-      sample.meta = m10 %>% select(Pop))
+      sample.meta = m496 %>% select(Pop))
 ```
 
 ```{r}
