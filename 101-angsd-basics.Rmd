@@ -30,6 +30,7 @@ align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","
 filtered_align <- subset(align496, Dedup > 100000)
 meta<-read_csv("metadata/meta01222025.csv")
 m483<-left_join(filtered_align,meta, by="Ind") %>%   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
+n <- nrow(m483)
 ```
 
 Set up sample names and bamlist.
@@ -82,7 +83,7 @@ Now I can try some basic angsd-y things. I'll use the module to see if it works.
 ```{sh, eval=FALSE}
 module load angsd
 srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
--minInd 435 -bam bamlists/483.bamlist \
+-minInd .9*n -bam bamlists/483.bamlist \
 -ref /home/jsweeney/newark/genomes/genome.fasta \
 -r JBECYN010000001.1 -out outputs/101/snps-483 \
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
