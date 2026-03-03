@@ -23,7 +23,7 @@ I have 10 alignments in data from Cold Creak Reservoir in data. I'll set up some
 #m10<-left_join(align10,meta) %>% mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
 ```
 
-now using all 496 individuals -js20260225
+now using all 483 individuals (filtering for those with greater than 1E6 reads) -js20260225
 
 ```{r}
 align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
@@ -90,18 +90,18 @@ srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-n
 
 ```
 
--> Number of sites retained after filtering: 15112
+-> Number of sites retained after filtering: 15062 
 
 ```{sh, eval=FALSE}
 #convert to .vcf
 module load plink
-plink --tped outputs/101/snps-496.tped --tfam outputs/101/snps-496.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
+plink --tped outputs/101/snps-483.tped --tfam outputs/101/snps-483.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
 plink --ped outputs/101/plink-binary.ped --map outputs/101/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101/plink
 module load tabix
 bgzip outputs/101/plink.vcf
 tabix outputs/101/plink.vcf.gz
 module load bcftools
-bcftools reheader --samples bamlists/496.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+bcftools reheader --samples bamlists/483.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
 module load tabix
 tabix outputs/101/renamed.vcf.gz
 ```
@@ -114,7 +114,7 @@ Using "Pop" for convenience, but is sampling location.
 
 ```{r}
 snps<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
-      sample.meta = m496 %>% select(Pop))
+      sample.meta = m483 %>% select(Pop))
 ```
 
 ```{r}
