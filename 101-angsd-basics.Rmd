@@ -31,6 +31,7 @@ filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
 m404 <-left_join(filtered_align,meta, by="Ind") %>%   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m404, Species == "newarkensis" )
 ```
 
 Set up sample names and bamlist.
@@ -47,6 +48,8 @@ mkdir bamlists
 ```{r}
 m404 %>% select(Path) %>% write_tsv("bamlists/404.bamlist", col_names = FALSE)
 m404 %>% select(GVL_Code) %>% write_tsv("bamlists/404.names", col_names = FALSE)
+m_nwrk %>% select(Path) %>% write_tsv("bamlists/nwrk.bamlist", col_names = FALSE)
+m_nwrk %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk.names", col_names = FALSE)
 ```
 
 The reference genome for these was `/home/maccamp/genomes/gila-orcutti/GCA_026230005.1_fGilOrc1.0.hap1_genomic.fna.gz` a large contig is `JAPDVR010000001.1`.       
@@ -64,7 +67,6 @@ mkdir outputs
 mkidr outputs/101
 ```
 
-
 Now I can try some basic angsd-y things. I'll use the module to see if it works.   
 
 ```{sh, eval=FALSE}
@@ -78,7 +80,7 @@ Now I can try some basic angsd-y things. I'll use the module to see if it works.
 
 ```
 
-	-> Number of sites retained after filtering: 2910 
+-> Number of sites retained after filtering: 3210 
 
 ```{sh, eval=FALSE}
 module load angsd
@@ -87,27 +89,53 @@ min_ind=$(( n_ind * 9 / 10 ))
 srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
 -minInd $min_ind -bam bamlists/404.bamlist \
 -ref /home/jsweeney/newark/genomes/genome.fasta \
--r JBECYN010000001.1 -out outputs/101/snps-483 \
+-r JBECYN010000001.1 -out outputs/101/snps-404 \
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
 -doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101/snps-404.out 2> outputs/101/snps-404.err &
-
 ```
 
--> Number of sites retained after filtering: 2253 
+now snp discover only on newarkensis 
+```{sh, eval=FALSE}
+module load angsd
+n_ind=$(wc -l < bamlists/nwrk.bamlist)
+min_ind=$(( n_ind * 9 / 10 ))
+srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 24 \
+-minInd $min_ind -bam bamlists/nwrk.bamlist \
+-ref /home/jsweeney/newark/genomes/genome.fasta \
+-r JBECYN010000001.1 -out outputs/101/snps-nwrk \
+-minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
+-doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101/snps-nwrk.out 2> outputs/101/snps-nwrk.err &
+```
+
 
 ```{sh, eval=FALSE}
 #convert to .vcf
 module load plink
-plink --tped outputs/101/snps-483.tped --tfam outputs/101/snps-404.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
+plink --tped outputs/101/snps-404.tped --tfam outputs/101/snps-404.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
 plink --ped outputs/101/plink-binary.ped --map outputs/101/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101/plink
 module load tabix
 bgzip outputs/101/plink.vcf
 tabix outputs/101/plink.vcf.gz
 module load bcftools
-bcftools reheader --samples bamlists/483.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+bcftools reheader --samples bamlists/404.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
 module load tabix
 tabix outputs/101/renamed.vcf.gz
 ```
+
+```{sh, eval=FALSE}
+#convert to .vcf
+module load plink
+plink --tped outputs/101/snps-nwrk.tped --tfam outputs/101/snps-nwrk.tfam --out outputs/101/plink-binary --recode --allow-extra-chr --noweb
+plink --ped outputs/101/plink-binary.ped --map outputs/101/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101/plink
+module load tabix
+bgzip outputs/101/plink.vcf
+tabix outputs/101/plink.vcf.gz
+module load bcftools
+bcftools reheader --samples bamlists/nwrk.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+module load tabix
+tabix outputs/101/renamed_nwrk.vcf.gz
+```
+
 
 Now there is a .vcf file with the SNPs and names by sample names, putting in my outputs/101 locally.    
 
@@ -117,7 +145,7 @@ Using "Pop" for convenience, but is sampling location.
 
 ```{r}
 snps<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
-      sample.meta = m483 %>% select(Pop))
+      sample.meta = m404 %>% select(Pop))
 ```
 
 ```{r}
@@ -141,6 +169,8 @@ ggplot(df) +
 
 ```
 
+checking PC 1 vs PC 3 -js20260305
+
 ```{r}
 df<-pca$data$pca
 ggplot(df) +
@@ -149,6 +179,59 @@ ggplot(df) +
   theme(panel.grid = element_blank()) +
   xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
   ylab(paste0("PC3 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
+color fill by species instead of location
+
+```{r}
+snps_by_sp<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
+      sample.meta = m404 %>% select(Species))
+```
+
+
+```{r}
+pca_sp<-plot_clusters(snps_by_sp)
+pca_sp$plots
+```
+
+
+```{r}
+df_sp<-pca_sp$data$pca
+ggplot(df_sp) +
+  geom_point(aes(x=PC1, y=PC2, fill=Species), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
+now by pop just for newarkensis
+```{r}
+snps_n<-import.snpR.data(genotypes = "../outputs/101/renamed.vcf.gz", 
+      sample.meta = m404 %>% select(Species, Pop))
+```
+
+
+```{r}
+pca_n<-plot_clusters(snps_n)
+pca_n$plots
+```
+
+
+```{r}
+df_n<-pca_n$data$pca %>% filter(Species == "newarkensis")
+ggplot(df_n) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
   ggtitle("Super informative plot title\n") +
   theme(plot.title = element_text(hjust=0.5))
 
