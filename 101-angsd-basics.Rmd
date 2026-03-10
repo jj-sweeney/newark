@@ -131,7 +131,7 @@ module load tabix
 bgzip outputs/101/plink.vcf
 tabix outputs/101/plink.vcf.gz
 module load bcftools
-bcftools reheader --samples bamlists/nwrk.names outputs/101/plink.vcf.gz > outputs/101/renamed.vcf.gz
+bcftools reheader --samples bamlists/nwrk.names outputs/101/plink.vcf.gz > outputs/101/renamed_nwrk.vcf.gz
 module load tabix
 tabix outputs/101/renamed_nwrk.vcf.gz
 ```
@@ -236,6 +236,35 @@ ggplot(df_n) +
   theme(plot.title = element_text(hjust=0.5))
 
 ```
+
+now from SNP discovery w only newarkensis included
+
+```{r}
+snps_nwrk<-import.snpR.data(genotypes = "../outputs/101/renamed_nwrk.vcf.gz", 
+      sample.meta = m_nwrk %>% select(Pop))
+```
+
+```{r}
+pca_nwrk<-plot_clusters(snps_nwrk)
+pca_nwrk$plots
+```
+
+
+Can pull data frame for plotting from pca object.    
+
+```{r}
+df_nwrk<-pca_nwrk$data$pca
+ggplot(df_nwrk) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
+
 
 
 on farm, switching back to main branch
