@@ -1,0 +1,86 @@
+---
+title: "102-phylogeny.Rmd"
+author: "joe sweeney"
+date: "2026-03-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages('ape')
+#install.packages('phangorn')
+library(ape)
+library(phangorn)
+library(tanggle)
+library(ggtree)
+library(tidyverse)
+```
+
+```{r}
+align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+filtered_align <- subset(align496, Dedup > 500000)
+filtered_align <- subset(filtered_align, Cov > 0.1)
+meta<-read_csv("metadata/meta01222025.csv")
+m404 <-left_join(filtered_align,meta, by="Ind") %>%   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m404, Species == "newarkensis" )
+```
+
+Filter for samples out of LD
+```{sh, eval=FALSE}
+module load bcftools
+bcftools +fill-tags outputs/101/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101/pruned_nwrk.vcf
+
+bcftools +fill-tags outputs/101/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101/pruned_nwrk-rand.vcf
+```
+
+
+Convert VCF to PHYLIP
+```{sh, eval=FALSE}
+curl -LO https://raw.githubusercontent.com/edgardomortiz/vcf2phylip/master/vcf2phylip.py
+module load conda
+conda create -n py2 python=2.7 && conda activate py2
+python vcf2phylip.py -i outputs/101/pruned_nwrk.vcf
+python2 vcf2phylip.py -i outputs/101/pruned_nwrk.vcf
+python2 vcf2phylip.py -i outputs/101/pruned_nwrk-rand.vcf
+mkdir outputs/102
+mv *.phy outputs/102
+```
+
+
+```{r}
+dat<-read.dna(file="../outputs/102/pruned_nwrk.min4.phy")
+write.nexus.data(dat, file="../outputs/102/pruned_nwrk.nex")
+
+dat<-read.dna(file="../outputs/102/pruned_nwrk-rand.min4.phy")
+write.nexus.data(dat, file="../outputs/102/pruned_nwrk-rand.nex")
+```
+
+
+Make network in SplitsTree4 with Taxa, splits, and network
+```{r}
+net<-read.nexus.networx("../outputs/102/pruned_nwrk.network")
+g<-ggsplitnet(net)  
+g$data<-left_join(g$data, m_nwrk, by=c("label"="GVL_Code")) 
+
+n<-g + 
+  geom_tippoint(aes(fill=`Tributary/Collection Location`), cex=5, pch=21, alpha=1.0) +
+  scale_fill_viridis_d(option="H") +
+  guides(fill = guide_legend(override.aes = list(pch = 22)))
+
+n
+```
+
+```{r}
+df<-relocate(m_nwrk, GVL_Code) %>% rename(label=GVL_Code)
+t <- read.tree("../outputs/102/pruned_nwrk.tre")
+ggtree(t) %<+% df +
+  geom_tippoint(aes(color=`Tributary/Collection Location`)) +
+  geom_tiplab(size = 1.5) +
+  geom_treescale() 
+```
+
+
+
