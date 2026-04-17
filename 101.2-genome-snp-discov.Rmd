@@ -36,9 +36,9 @@ m_nwrk %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk.names", col_names = FAL
 now doing snp discovery using all contigs from s bicolor reference
 ```{sh, eval=FALSE}
 mkdir outputs/101.2
-module load angsd
 n_ind=$(wc -l < bamlists/fil.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
+module load angsd
 srun -t 2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 12 \
 -minInd $min_ind -bam bamlists/fil.bamlist \
 -ref /home/jsweeney/newark/genomes/genome.fasta \
