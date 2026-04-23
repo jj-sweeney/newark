@@ -26,6 +26,7 @@ m_fil <-left_join(filtered_align,meta, by="Ind") %>%   mutate(Path=paste0("data/
 m_nwrk <- subset(m_fil, Species == "newarkensis" )
 ```
 
+make bamlists from filtered samples (fil) and just newark samples (nwrk)
 ```{r}
 m_fil %>% select(Path) %>% write_tsv("bamlists/fil.bamlist", col_names = FALSE)
 m_fil %>% select(GVL_Code) %>% write_tsv("bamlists/fil.names", col_names = FALSE)
@@ -33,18 +34,11 @@ m_nwrk %>% select(Path) %>% write_tsv("bamlists/nwrk.bamlist", col_names = FALSE
 m_nwrk %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk.names", col_names = FALSE)
 ```
 
-checking contig size of s bicolor reference in ~/newark/genomes
-```{sh, eval=FALSE}
-samtools faidx genome.fasta
-awk '$2 >= 50000000 {print $1}' genomes/genome.fasta.fai > contigs_50Mb.fai
-```
-
 
 now doing snp discovery in RAD-projects/newark using all contigs 
   from s bicolor reference
-using only contigs with > 50Mb (?)
 ```{sh, eval=FALSE}
-mkdir outputs/101_2
+mkdir outputs/101.2
 n_ind=$(wc -l < bamlists/fil.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
 echo $min_ind
@@ -55,3 +49,27 @@ srun -t 1-2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
 -doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101.2/snps-fil.out 2> outputs/101.2/snps-fil.err &
 ```
+
+
+```{sh, eval=FALSE}
+#convert to .vcf
+module load plink
+plink --tped outputs/101.2/snps-fil.tped --tfam outputs/101.2/snps-fil.tfam --out outputs/101.2/plink-binary --recode --allow-extra-chr --noweb
+plink --ped outputs/101.2/plink-binary.ped --map outputs/101.2/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101.2/plink
+module load tabix
+bgzip outputs/101.2/plink.vcf
+tabix outputs/101.2/plink.vcf.gz
+module load bcftools
+bcftools reheader --samples bamlists/fil.names outputs/101.2/plink.vcf.gz > outputs/101.2/renamed_fil.vcf.gz
+module load tabix
+tabix outputs/101.2/renamed_fil.vcf.gz
+```
+
+
+
+
+
+
+
+
+
