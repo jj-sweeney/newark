@@ -18,7 +18,7 @@ taken from 101-angsd-basics
 used "fil" instead of 404 so that you dont have to keep updating n with
   filtering adjustments
 ```{r}
-align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
@@ -43,16 +43,11 @@ n_ind=$(wc -l < bamlists/fil.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
 echo $min_ind
 module load angsd
-srun -t 1-2:00:00 -p bmh --account=millermrgrp --mem=128G --nodes=1 --ntasks-per-node=1 --cpus-per-task=12 angsd -nthreads 12 \
--minInd 364 -bam bamlists/fil.bamlist -out outputs/101.2/snps-fil \
--ref /home/jsweeney/newark/genomes/genome.fasta \
--minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
--doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101.2/snps-fil.out 2> outputs/101.2/snps-fil.err &
+sbatch run_angsd.sh 
 ```
 
-
+converting to vcf
 ```{sh, eval=FALSE}
-#convert to .vcf
 module load plink
 plink --tped outputs/101.2/snps-fil.tped --tfam outputs/101.2/snps-fil.tfam --out outputs/101.2/plink-binary --recode --allow-extra-chr --noweb
 plink --ped outputs/101.2/plink-binary.ped --map outputs/101.2/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101.2/plink
@@ -66,10 +61,75 @@ tabix outputs/101.2/renamed_fil.vcf.gz
 ```
 
 
+filtering snps in LD
+```{sh, eval=FALSE}
+module load bcftools
+bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand.vcf
+```
 
 
+```{r}
+snps<-import.snpR.data(genotypes = "outputs/101.2/pruned.vcf.gz", 
+      sample.meta = m_fil %>% select(Pop))
+
+pca<-plot_clusters(snps)
+pca$plots
+```
+
+Creating a PCA for all inds by sample site
+```{r}
+df<-pca$data$pca
+ggplot(df) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+```
 
 
+now all inds by species
+```{r}
+snps_by_sp<-import.snpR.data(genotypes = "outputs/101.2/pruned.vcf.gz", 
+      sample.meta = m_fil %>% select(Species))
+pca_sp<-plot_clusters(snps_by_sp)
+pca_sp$plots
+```
 
+```{r}
+df_sp<-pca_sp$data$pca
+ggplot(df_sp) +
+  geom_point(aes(x=PC1, y=PC2, fill=Species), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("SNP clustering by species\n") +
+  theme(plot.title = element_text(hjust=0.5))
+```
 
+```{r}
+snps_n<-import.snpR.data(genotypes = "outputs/101.2/pruned.vcf.gz", 
+      sample.meta = m_fil %>% select(Species, Pop))
+
+pca_n<-plot_clusters(snps_n)
+pca_n$plots
+```
+
+```{r}
+df_n<-pca_n$data$pca %>% filter(Species == "newarkensis")
+ggplot(df_n) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("SNP clustering by pop (newarkensis)\n") +
+  theme(plot.title = element_text(hjust=0.5))
+
+```
 
