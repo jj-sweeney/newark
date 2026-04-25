@@ -5,7 +5,7 @@ date: "2026-04-17"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE} 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -34,7 +34,6 @@ m_nwrk %>% select(Path) %>% write_tsv("bamlists/nwrk.bamlist", col_names = FALSE
 m_nwrk %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk.names", col_names = FALSE)
 ```
 
-
 now doing snp discovery in RAD-projects/newark using all contigs 
   from s bicolor reference
 ```{sh, eval=FALSE}
@@ -42,7 +41,6 @@ mkdir outputs/101.2
 n_ind=$(wc -l < bamlists/fil.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
 echo $min_ind
-module load angsd
 sbatch run_angsd.sh 
 ```
 
@@ -60,7 +58,6 @@ module load tabix
 tabix outputs/101.2/renamed_fil.vcf.gz
 ```
 
-
 filtering snps in LD
 ```{sh, eval=FALSE}
 module load bcftools
@@ -69,6 +66,11 @@ bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcft
 bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand.vcf
 ```
 
+moving to local storage
+```{sh, eval=FALSE}
+gzip -k pruned.vcf
+scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD-projects/newark/outputs/101.2/pruned.vcf.gz
+```
 
 ```{r}
 snps<-import.snpR.data(genotypes = "outputs/101.2/pruned.vcf.gz", 
@@ -90,7 +92,6 @@ ggplot(df) +
   ggtitle("Super informative plot title\n") +
   theme(plot.title = element_text(hjust=0.5))
 ```
-
 
 now all inds by species
 ```{r}
@@ -132,4 +133,63 @@ ggplot(df_n) +
   theme(plot.title = element_text(hjust=0.5))
 
 ```
+
+--------------------------------------------------------------------------------
+now doing snp discovery on only newarkensis
+```{sh, eval=FALSE}
+n_ind=$(wc -l < bamlists/nwrk.bamlist)
+min_ind=$(( n_ind * 9 / 10 ))
+echo $min_ind
+sbatch run_angsd.sh 
+```
+
+```{sh, eval=FALSE}
+module load plink
+plink --tped outputs/101.2/snps-nwrk.tped --tfam outputs/101.2/snps-nwrk.tfam --out outputs/101.2/plink-binary_nwrk --recode --allow-extra-chr --noweb
+plink --ped outputs/101.2/plink-binary_nwrk.ped --map outputs/101.2/plink-binary_nwrk.map --recode vcf --allow-extra-chr -out outputs/101.2/plink_nwrk
+module load tabix
+bgzip outputs/101.2/plink_nwrk.vcf
+tabix outputs/101.2/plink_nwrk.vcf.gz
+module load bcftools
+bcftools reheader --samples bamlists/nwrk.names outputs/101.2/plink_nwrk.vcf.gz > outputs/101.2/renamed_nwrk.vcf.gz
+module load tabix
+tabix outputs/101.2/renamed_nwrk.vcf.gz
+```
+
+filtering snps in LD
+```{sh, eval=FALSE}
+module load bcftools
+bcftools +fill-tags outputs/101.2/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned_nwrk.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand_nwrk.vcf
+```
+
+moving to local storage
+```{sh, eval=FALSE}
+gzip -k outputs/101.2/pruned_nwrk.vcf
+
+# switch to home terminal. not on farm
+scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD_projects/newark/outputs/101.2/pruned_nwrk.vcf.gz Desktop/newark/outputs/101.2
+```
+
+```{r}
+snps_nwrk<-import.snpR.data(genotypes = "outputs/101.2/pruned_nwrk.vcf.gz", 
+      sample.meta = m_nwrk %>% select(Pop))
+
+pca_nwrk<-plot_clusters(snps)
+pca_nwrk$plots
+```
+
+```{r}
+df_nwrk<-pca_nwrk$data$pca
+ggplot(df_nwrk) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  ggtitle("Super informative plot title\n") +
+  theme(plot.title = element_text(hjust=0.5))
+```
+
 
