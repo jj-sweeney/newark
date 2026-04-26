@@ -176,7 +176,7 @@ scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD_projects/newark/outputs
 snps_nwrk<-import.snpR.data(genotypes = "outputs/101.2/pruned_nwrk.vcf.gz", 
       sample.meta = m_nwrk %>% select(Pop))
 
-pca_nwrk<-plot_clusters(snps)
+pca_nwrk<-plot_clusters(snps_nwrk)
 pca_nwrk$plots
 ```
 
@@ -188,7 +188,7 @@ ggplot(df_nwrk) +
   theme(panel.grid = element_blank()) +
   xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
   ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
-  ggtitle("Super informative plot title\n") +
+  ggtitle("newarkensis only snp discovery") +
   theme(plot.title = element_text(hjust=0.5))
 ```
 
