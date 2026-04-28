@@ -206,8 +206,8 @@ min_ind=$(( n_ind * 9 / 10 ))
 bamlist=nwrk_west.bamlist
 output=snps-nwrk_west
 echo $min_ind
-echo $bamlist
-echo $output
+
+
 module load angsd
 sbatch run_angsd.sh 
 ```
