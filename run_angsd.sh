@@ -6,7 +6,6 @@
 #SBATCH --mem=256G
 #SBATCH --cpus-per-task=12
 
-module load angsd
 angsd -nthreads 12 \
 -minInd $min_ind -bam bamlists/$bamlist -out outputs/101.2/$output \
 -ref /home/jsweeney/newark/genomes/genome.fasta \

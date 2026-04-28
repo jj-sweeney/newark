@@ -203,9 +203,12 @@ now only the western cluster
 ```{sh, eval=FALSE}
 n_ind=$(wc -l < bamlists/nwrk_west.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
-echo $min_ind
 bamlist=nwrk_west.bamlist
 output=snps-nwrk_west
+echo $min_ind
+echo $bamlist
+echo $output
+module load angsd
 sbatch run_angsd.sh 
 ```
 
