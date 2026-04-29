@@ -192,8 +192,8 @@ ggplot(df_nwrk) +
   geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
   theme_bw() +
   theme(panel.grid = element_blank()) +
-  xlab(paste0("PC1 (",pca$pca_loadings[1],"%)")) +
-  ylab(paste0("PC2 (",pca$pca_loadings[2],"%)")) +
+  xlab(paste0("PC1 (",pca_nwrk$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca_nwrk$pca_loadings[2],"%)")) +
   ggtitle("newarkensis only snp discovery") +
   theme(plot.title = element_text(hjust=0.5))
 ```
@@ -207,3 +207,50 @@ min_ind=$(( n_ind * 9 / 10 ))
 sbatch run_angsd.sh 
 ```
 
+```{sh, eval=FALSE}
+module load plink
+plink --tped outputs/101.2/snps-nwrk_west.tped --tfam outputs/101.2/snps-nwrk_west.tfam --out outputs/101.2/plink-binary_nwrk_west --recode --allow-extra-chr --noweb
+plink --ped outputs/101.2/plink-binary_nwrk_west.ped --map outputs/101.2/plink-binary_nwrk_west.map --recode vcf --allow-extra-chr -out outputs/101.2/plink_nwrk_west
+module load tabix
+bgzip outputs/101.2/plink_nwrk_west.vcf
+tabix outputs/101.2/plink_nwrk_west.vcf.gz
+module load bcftools
+bcftools reheader --samples bamlists/nwrk_west.names outputs/101.2/plink_nwrk_west.vcf.gz > outputs/101.2/renamed_nwrk_west.vcf.gz
+module load tabix
+tabix outputs/101.2/renamed_nwrk_west.vcf.gz
+```
+
+filtering snps in LD
+```{sh, eval=FALSE}
+module load bcftools
+bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned_nwrk_west.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand_nwrk_west.vcf
+```
+
+```{sh, eval=FALSE}
+gzip -k outputs/101.2/pruned_nwrk_west.vcf
+
+# switch to home terminal. not on farm
+scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD_projects/newark/outputs/101.2/pruned_nwrk_west.vcf.gz Desktop/newark/outputs/101.2
+```
+
+```{r}
+snps_nwrk_west<-import.snpR.data(genotypes = "outputs/101.2/pruned_nwrk_west.vcf.gz", 
+      sample.meta = m_nwrk_west %>% select(Pop))
+
+pca_nwrk_west<-plot_clusters(snps_nwrk_west)
+pca_nwrk_west$plots
+```
+
+```{r}
+df_nwrk_west<-pca_nwrk_west$data$pca
+ggplot(df_nwrk_west) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca_nwrk_west$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca_nwrk_west$pca_loadings[2],"%)")) +
+  ggtitle("newarkensis western cluster only snp discovery") +
+  theme(plot.title = element_text(hjust=0.5))
+```
