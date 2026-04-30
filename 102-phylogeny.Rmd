@@ -20,67 +20,140 @@ library(tidyverse)
 ```
 
 ```{r}
-align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
-m404 <-left_join(filtered_align,meta, by="Ind") %>%   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% mutate(Pop=`Tributary/Collection Location`)
-m_nwrk <- subset(m404, Species == "newarkensis" )
+m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
+  mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
+  mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m_fil, Species == "newarkensis" )
+exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
+m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
 ```
-
-Filter for samples out of LD
-```{sh, eval=FALSE}
-module load bcftools
-bcftools +fill-tags outputs/101/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101/pruned_nwrk.vcf
-
-bcftools +fill-tags outputs/101/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101/pruned_nwrk-rand.vcf
-```
-
 
 Convert VCF to PHYLIP
 ```{sh, eval=FALSE}
-curl -LO https://raw.githubusercontent.com/edgardomortiz/vcf2phylip/master/vcf2phylip.py
+#curl -LO https://raw.githubusercontent.com/edgardomortiz/vcf2phylip/master/vcf2phylip.py
 module load conda
-conda create -n py2 python=2.7 && conda activate py2
-python vcf2phylip.py -i outputs/101/pruned_nwrk.vcf
-python2 vcf2phylip.py -i outputs/101/pruned_nwrk.vcf
-python2 vcf2phylip.py -i outputs/101/pruned_nwrk-rand.vcf
-mkdir outputs/102
+conda activate py2
+python2 vcf2phylip.py -i outputs/101.2/pruned.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned_nwrk.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned_nwrk_west.vcf
+#mkdir outputs/102
 mv *.phy outputs/102
+conda deactivate
+
+# in new terminal on local machine
+scp jsweeney@farm:/group/ajfingergrp/RAD_projects/newark/outputs/102/pruned.min4.phy Desktop/newark/outputs/102
+
 ```
 
+```{r}
+dat<-read.dna(file="outputs/102/pruned.min4.phy")
+write.nexus.data(dat, file="outputs/102/pruned.nex")
+
+dat<-read.dna(file="outputs/102/pruned_nwrk.min4.phy")
+write.nexus.data(dat, file="outputs/102/pruned_nwrk.nex")
+
+dat<-read.dna(file="outputs/102/pruned_nwrk_west.min4.phy")
+write.nexus.data(dat, file="outputs/102/pruned_nwrk_west.nex")
+```
 
 ```{r}
-dat<-read.dna(file="../outputs/102/pruned_nwrk.min4.phy")
-write.nexus.data(dat, file="../outputs/102/pruned_nwrk.nex")
+# Your sampled IDs
+set.seed(42)
+m_fil_sampled <- m_fil %>%
+  group_by(Pop) %>%
+  slice_sample(n = 5) %>%
+  ungroup()
 
-dat<-read.dna(file="../outputs/102/pruned_nwrk-rand.min4.phy")
-write.nexus.data(dat, file="../outputs/102/pruned_nwrk-rand.nex")
+sampled_ids <- m_fil_sampled$GVL_Code
+
+m_nwrk_sampled <- m_nwrk %>%
+  group_by(Pop) %>%
+  slice_sample(n = 5) %>%
+  ungroup()
+
+sampled_nwrk_ids <- m_nwrk_sampled$GVL_Code
 ```
 
 
 Make network in SplitsTree4 with Taxa, splits, and network
 ```{r}
-net<-read.nexus.networx("../outputs/102/pruned_nwrk.network")
+net<-read.nexus.networx("outputs/102/pruned.network")
 g<-ggsplitnet(net)  
-g$data<-left_join(g$data, m_nwrk, by=c("label"="GVL_Code")) 
+g$data<-left_join(g$data, m_fil, by=c("label"="GVL_Code")) 
 
 n<-g + 
-  geom_tippoint(aes(fill=`Tributary/Collection Location`), cex=5, pch=21, alpha=1.0) +
+  geom_tippoint(aes(fill=Species), cex=5, pch=21, alpha=1.0) +
   scale_fill_viridis_d(option="H") +
   guides(fill = guide_legend(override.aes = list(pch = 22)))
 
 n
 ```
 
+In splitstree trees -> NJ. Export. Select Trees -> NewickTree
 ```{r}
-df<-relocate(m_nwrk, GVL_Code) %>% rename(label=GVL_Code)
-t <- read.tree("../outputs/102/pruned_nwrk.tre")
+df<-relocate(m_fil, GVL_Code) %>% rename(label=GVL_Code)
+t <- read.tree("outputs/102/pruned.tre")
 ggtree(t) %<+% df +
-  geom_tippoint(aes(color=`Tributary/Collection Location`)) +
+  geom_tippoint(aes(color=Species)) +
   geom_tiplab(size = 1.5) +
   geom_treescale() 
 ```
 
+```{r}
+t_full <- read.tree("outputs/102/pruned.tre")
+tips_to_drop <- t_full$tip.label[!t_full$tip.label %in% sampled_ids]
+t_sampled <- drop.tip(t_full, tips_to_drop)
 
+df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
+
+ggtree(t_sampled) %<+% df_sampled +
+  geom_tippoint(aes(color = Species), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_treescale()
+
+```
+
+--------------------------------------------------------------------------------
+now only newarkensis 
+
+Make network in SplitsTree4 with Taxa, splits, and network
+```{r}
+net_nwrk<-read.nexus.networx("outputs/102/pruned_nwrk.network")
+g_nwrk<-ggsplitnet(net_nwrk)  
+g_nwrk$data<-left_join(g_nwrk$data, m_nwrk, by=c("label"="GVL_Code")) 
+
+n_nwrk<-g_nwrk + 
+  geom_tippoint(aes(fill=Pop), cex=5, pch=21, alpha=1.0) +
+  scale_fill_viridis_d(option="H") +
+  guides(fill = guide_legend(override.aes = list(pch = 22)))
+
+n_nwrk
+```
+
+In splitstree trees -> NJ. Export. Select Trees -> NewickTree
+```{r}
+df_nwrk<-relocate(m_nwrk, GVL_Code) %>% rename(label=GVL_Code)
+t_nwrk <- read.tree("outputs/102/pruned_nwrk.tre")
+ggtree(t_nwrk) %<+% df +
+  geom_tippoint(aes(color=Pop)) +
+  geom_tiplab(size = 1.5) +
+  geom_treescale() 
+```
+
+```{r}
+t_nwrk_full <- read.tree("outputs/102/pruned_nwrk.tre")
+tips_to_drop <- t_nwrk_full$tip.label[!t_nwrk_full$tip.label %in% sampled_nwrk_ids]
+t_nwrk_sampled <- drop.tip(t_nwrk_full, tips_to_drop)
+
+df_nwrk_sampled <- relocate(m_nwrk_sampled, GVL_Code) %>% rename(label = GVL_Code)
+
+ggtree(t_nwrk_sampled) %<+% df_nwrk_sampled +
+  geom_tippoint(aes(color = Pop), cex = 3) +
+  geom_treescale()
+
+```
 
