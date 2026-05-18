@@ -67,9 +67,17 @@ tabix outputs/101.2/renamed_fil.vcf.gz
 filtering snps in LD
 ```{sh, eval=FALSE}
 module load bcftools
-bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned.vcf
+bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned-fil.vcf
 
-bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand.vcf
+bcftools +fill-tags outputs/101.2/renamed_fil.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand-fil.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned-nwrk.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand-nwrk.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned-nwrk_west.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand-nwrk_west.vcf
 ```
 
 moving to local storage
