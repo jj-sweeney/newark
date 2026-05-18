@@ -3,3 +3,42 @@ title: "102.2-ML-phylogeny"
 output: html_document
 ---
 
+```{r}
+library(ggtree)
+library(tidyverse)
+```
+
+```{r}
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+filtered_align <- subset(align496, Dedup > 500000)
+filtered_align <- subset(filtered_align, Cov > 0.1)
+meta<-read_csv("metadata/meta01222025.csv")
+m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
+  mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
+  mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m_fil, Species == "newarkensis" )
+exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
+m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
+```
+
+
+```{sh, eval=FALSE}
+#curl -LO https://raw.githubusercontent.com/edgardomortiz/vcf2phylip/master/vcf2phylip.py
+module load conda
+conda activate py2
+python2 vcf2phylip.py -i outputs/101.2/pruned-fil.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned-nwrk.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned-nwrk_west.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned-rand-fil.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned-rand-nwrk.vcf
+python2 vcf2phylip.py -i outputs/101.2/pruned-rand-nwrk_west.vcf
+#mkdir outputs/102.2
+mv *.phy outputs/102.2
+conda deactivate
+```
+
+```{sh, eval=FALSE}
+conda create -n iqtree -c bioconda -c conda-forge iqtree
+conda activate iqtree
+
+```
