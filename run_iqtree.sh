@@ -6,4 +6,4 @@
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=12
 
-iqtree -s outputs/102.2/pruned-fil.min4.phy -st DNA -B 1000 -nt 128 
+iqtree -s outputs/102.2/pruned-fil.min4.phy -st DNA -B 1000 -nt 12
