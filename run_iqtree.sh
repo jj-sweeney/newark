@@ -6,4 +6,4 @@
 #SBATCH --mem=256G
 #SBATCH --cpus-per-task=12
 
-iqtree -s outputs/102.2/pruned-fil.min4.phy -B 1000
+iqtree -s outputs/102.2/pruned-fil.min4.phy -B 1000 -pre outputs/102.2
