@@ -1,0 +1,30 @@
+---
+title: "103-pcadapt"
+output: html_document
+---
+
+```{r}
+install.packages("pcadapt")
+install.packages("qvalue")
+library(qvalue)
+library(pcadapt)
+library(tidyverse)
+```
+
+
+making a scree plot to determine optimal K
+```{r}
+path <- read.pcadapt("outputs/101.2/pruned-nwrk.vcf", type = "vcf")
+
+# scree plot first
+x_temp <- pcadapt(path, K = 20, min.maf = 0.01)
+plot(x_temp, option = "screeplot")
+```
+
+Based on the optimal K from scree plot (3 in this case) run pcadapt
+```{r}
+x <- pcadapt(path, K = 3, min.maf = 0.01)
+summary(x)
+plot(x , option = "manhattan")
+plot(x, option = "qqplot")
+```
