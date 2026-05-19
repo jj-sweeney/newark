@@ -65,6 +65,7 @@ sbatch run_iqtree.sh
 ```
 
 load trees after transfering to local output 
+making tree for all species in dataset
 ```{r}
 fil_tre <- read.tree("outputs/102.2/pruned-fil.min4.phy.treefile")
 t1 <- ggtree(fil_tre) + 
@@ -80,8 +81,49 @@ df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
 t1s <- ggtree(fil_tre_s) %<+% df_sampled +
   geom_tippoint(aes(color = Species), cex = 3) +
   geom_tiplab(aes(label = Pop), size = 2) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
   geom_treescale()
 t1s
 ```
 
+making tree for just newarkensis with color by sample site 
+```{r}
+nwrk_tre <- read.tree("outputs/102.2/pruned-nwrk.min4.phy.treefile")
+t2 <- ggtree(nwrk_tre) + 
+  geom_tiplab() + 
+  geom_treescale()
+t2
 
+# making tree with sampled inds from earlier
+tips_to_drop <- nwrk_tre$tip.label[!nwrk_tre$tip.label %in% sampled_ids]
+nwrk_tre_s <- drop.tip(nwrk_tre, tips_to_drop)
+
+df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
+t2s <- ggtree(nwrk_tre_s) %<+% df_sampled +
+  geom_tippoint(aes(color = Pop), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
+  geom_treescale()
+t2s
+```
+
+making tree for just newarkensis "western" cluster with color by sample site 
+```{r}
+nwrk_west_tre <- read.tree("outputs/102.2/pruned-nwrk_west.min4.phy.treefile")
+t3 <- ggtree(nwrk_west_tre) + 
+  geom_tiplab() + 
+  geom_treescale()
+t3
+
+# making tree with sampled inds from earlier
+tips_to_drop <- nwrk_west_tre$tip.label[!nwrk_west_tre$tip.label %in% sampled_ids]
+nwrk_tre_s <- drop.tip(nwrk_west_tre, tips_to_drop)
+
+df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
+t3s <- ggtree(nwrk_tre_s) %<+% df_sampled +
+  geom_tippoint(aes(color = Pop), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
+  geom_treescale()
+t3s
+```
