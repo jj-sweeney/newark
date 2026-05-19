@@ -5,8 +5,6 @@ output: html_document
 
 ```{r}
 install.packages("pcadapt")
-install.packages("qvalue")
-library(qvalue)
 library(pcadapt)
 library(tidyverse)
 ```
