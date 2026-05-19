@@ -6,8 +6,9 @@ output: html_document
 ```{r}
 library(ggtree)
 library(tidyverse)
+library(ape)
 ```
-
+load metadata
 ```{r}
 align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
@@ -21,7 +22,25 @@ exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
 m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
 ```
 
+sampling max 5 inds from each site for making trimmed phylogeny later 
+```{r}
+set.seed(23)
+m_fil_sampled <- m_fil %>%
+  group_by(Pop) %>%
+  slice_sample(n = 5) %>%
+  ungroup()
 
+sampled_ids <- m_fil_sampled$GVL_Code
+
+m_nwrk_sampled <- m_nwrk %>%
+  group_by(Pop) %>%
+  slice_sample(n = 5) %>%
+  ungroup()
+
+sampled_nwrk_ids <- m_nwrk_sampled$GVL_Code
+```
+
+convert vcf to phylip
 ```{sh, eval=FALSE}
 #curl -LO https://raw.githubusercontent.com/edgardomortiz/vcf2phylip/master/vcf2phylip.py
 module load conda
@@ -37,8 +56,32 @@ mv *.phy outputs/102.2
 conda deactivate
 ```
 
+run iqtree
 ```{sh, eval=FALSE}
-conda create -n iqtree -c bioconda -c conda-forge iqtree
+#conda create -n iqtree -c bioconda -c conda-forge iqtree
+module load conda
 conda activate iqtree
-
+sbatch run_iqtree.sh
 ```
+
+load trees after transfering to local output 
+```{r}
+fil_tre <- read.tree("outputs/102.2/pruned-fil.min4.phy.treefile")
+t1 <- ggtree(fil_tre) + 
+  geom_tiplab() + 
+  geom_treescale()
+t1
+
+# making tree with sampled inds from earlier
+tips_to_drop <- fil_tre$tip.label[!fil_tre$tip.label %in% sampled_ids]
+fil_tre_s <- drop.tip(fil_tre, tips_to_drop)
+
+df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
+t1s <- ggtree(fil_tre_s) %<+% df_sampled +
+  geom_tippoint(aes(color = Species), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_treescale()
+t1s
+```
+
+
