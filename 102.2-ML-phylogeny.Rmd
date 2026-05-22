@@ -6,7 +6,7 @@ output: html_document
 ```{r}
 library(ggtree)
 library(tidyverse)
-library(ape)
+library(phangorn)
 ```
 load metadata
 ```{r}
@@ -72,7 +72,10 @@ t1 <- ggtree(fil_tre) +
   geom_tiplab() + 
   geom_treescale()
 t1
+```
 
+sampling for 5 inds from each site to get a cleaner tree
+```{r}
 # making tree with sampled inds from earlier
 tips_to_drop <- fil_tre$tip.label[!fil_tre$tip.label %in% sampled_ids]
 fil_tre_s <- drop.tip(fil_tre, tips_to_drop)
@@ -81,9 +84,20 @@ df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
 t1s <- ggtree(fil_tre_s) %<+% df_sampled +
   geom_tippoint(aes(color = Species), cex = 3) +
   geom_tiplab(aes(label = Pop), size = 2) +
-  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
+  geom_nodepoint(aes(subset = as.numeric(label) > 85), size = 1, color = "gray") +
   geom_treescale()
 t1s
+```
+
+re-rooting at midpoint 
+```{r}
+fil_tre_s_m <- midpoint(fil_tre_s, node.labels = "support")
+t1m <- ggtree(fil_tre_s_m) %<+% df_sampled +
+  geom_tippoint(aes(color = Species), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 85), size = 1, color = "gray") +
+  geom_treescale()
+t1m
 ```
 
 making tree for just newarkensis with color by sample site 
@@ -93,7 +107,10 @@ t2 <- ggtree(nwrk_tre) +
   geom_tiplab() + 
   geom_treescale()
 t2
+```
 
+sampling for 5 inds only 
+```{r}
 # making tree with sampled inds from earlier
 tips_to_drop <- nwrk_tre$tip.label[!nwrk_tre$tip.label %in% sampled_ids]
 nwrk_tre_s <- drop.tip(nwrk_tre, tips_to_drop)
@@ -102,10 +119,22 @@ df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
 t2s <- ggtree(nwrk_tre_s) %<+% df_sampled +
   geom_tippoint(aes(color = Pop), cex = 3) +
   geom_tiplab(aes(label = Pop), size = 2) +
-  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
+  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "gray") +
   geom_treescale()
 t2s
 ```
+
+re-rooting at midpoint again
+```{r}
+nwrk_tre_s_m <- midpoint(nwrk_tre_s, node.labels = "support")
+t2m <- ggtree(nwrk_tre_s_m) %<+% df_sampled +
+  geom_tippoint(aes(color = Pop), cex = 3) +
+  geom_tiplab(aes(label = Pop), size = 2) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 85), size = 1, color = "gray") +
+  geom_treescale()
+t2m
+```
+
 
 making tree for just newarkensis "western" cluster with color by sample site 
 ```{r}
@@ -114,7 +143,9 @@ t3 <- ggtree(nwrk_west_tre) +
   geom_tiplab() + 
   geom_treescale()
 t3
+```
 
+```{r}
 # making tree with sampled inds from earlier
 tips_to_drop <- nwrk_west_tre$tip.label[!nwrk_west_tre$tip.label %in% sampled_ids]
 nwrk_tre_s <- drop.tip(nwrk_west_tre, tips_to_drop)
@@ -123,7 +154,7 @@ df_sampled <- relocate(m_fil_sampled, GVL_Code) %>% rename(label = GVL_Code)
 t3s <- ggtree(nwrk_tre_s) %<+% df_sampled +
   geom_tippoint(aes(color = Pop), cex = 3) +
   geom_tiplab(aes(label = Pop), size = 2) +
-  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "yellow") +
+  geom_nodepoint(aes(subset = as.numeric(label) > 90), size = 1, color = "gray") +
   geom_treescale()
 t3s
 ```
