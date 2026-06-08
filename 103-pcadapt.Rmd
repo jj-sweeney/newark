@@ -3,8 +3,8 @@ title: "103-pcadapt"
 output: html_document
 ---
 
-```{r}
-install.packages("pcadapt")
+```{r, echo=TRUE, warning=FALSE, message=FALSE}
+#install.packages("pcadapt")
 library(pcadapt)
 library(tidyverse)
 ```
@@ -22,7 +22,152 @@ plot(x_temp, option = "screeplot")
 Based on the optimal K from scree plot (3 in this case) run pcadapt
 ```{r}
 x <- pcadapt(path, K = 3, min.maf = 0.01)
+var<-round(x$singular.values^2*100,2)
+
 summary(x)
 plot(x , option = "manhattan")
 plot(x, option = "qqplot")
+```
+
+
+
+Mac notes, June 09, I get different results from Joe.
+Organizing metadata. Should have 301 fish..   
+
+```{r}
+fish<-read_tsv("bamlists/nwrk.names", col_names = c("GVL_Code"))
+mtot<-read_csv("metadata/meta01222025.csv")
+mtot<-fish %>% left_join(mtot)
+```
+
+
+
+```{r}
+m<-mtot
+```
+
+```{r}
+pcadata<-x$scores[,1:3] %>% as_tibble()
+pcadata<-pcadata %>% bind_cols(m)
+
+```
+
+```{r}
+p1<-ggplot(pcadata) +
+  geom_point(aes(x=V1, y=V2, fill=`Tributary/Collection Location`), pch=21, alpha=0.75, cex=2) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab("PC 1") +
+  ylab("PC 2") +
+  scale_fill_viridis_d(option="H") +
+  xlab(paste0("PC1 ",var[1],"%")) +
+  ylab(paste0("PC2 ",var[2],"%")) +
+  theme(axis.title=element_text(size=12, face="bold"))
+
+p1
+```
+
+
+## Outliers etc
+
+```{r}
+summary(x)
+```
+
+```{r}
+plot(x , option = "manhattan")
+```
+
+```{r}
+plot(x, option = "qqplot")
+```
+
+```{r}
+hist(x$pvalues, xlab = "p-values", main = NULL, breaks = 50, col = "orange")
+```
+
+```{r}
+plot(x, option = "stat.distribution")
+```
+
+```{R}
+par(mfrow = c(2, 2))
+for (i in 1:3)
+  plot(x$loadings[, i], pch = 19, cex = .3, ylab = paste0("Loadings PC", i))
+```
+
+
+```{r}
+padj <- p.adjust(x$pvalues,method="bonferroni")
+alpha <- 0.05
+outliers <- which(padj < alpha)
+length(outliers)
+
+snp_pc <- get.pc(x, outliers)
+snp_pc %>% group_by(PC) %>% summarize(Count=n())
+
+```
+
+
+What is our most extreme outlier?
+
+```{sh}
+cat outputs/101.2/pruned-nwrk.vcf | grep -v "#" | cut -f 1-3 > outputs/103/numbers.tsv
+
+```
+
+```{r}
+
+outlier <- which(-log10(x$pvalues) > 200)
+length(outlier)
+
+out<-get.pc(x, outlier)
+out
+```
+
+```{r}
+snpnumbers<-read_tsv("outputs/103/numbers.tsv", col_names = c("Chrom","Pos","Marker")) %>% mutate(SNP=1:n())
+
+snpnumbers %>% filter(SNP==3302)
+```
+
+
+
+Read in VCF and pulling interesting variants from PC
+
+```{r}
+pc2<-snp_pc %>% filter(PC == 2)
+pc2<-snpnumbers %>% filter(SNP %in% pc2$SNP)
+```
+
+```{r}
+vcf<-vcfR::read.vcfR("outputs/101.2/pruned-nwrk.vcf")
+dr<-vcfR::vcfR2loci(vcf)
+t<-dr[colnames(dr) %in% pc2$Marker]
+```
+```{r}
+t2<-t %>% as_tibble()
+t2$Sample<-row.names(t)
+t2 <- t2 %>% relocate(Sample)
+
+t2<-t2 %>% mutate(across(where(is.factor), as.character))
+t2[t2=="0/0"]<-"0"
+t2[t2=="0/1"]<-"1"
+t2[t2=="1/1"]<-"2"
+
+t3<-t2 %>% select(-Sample) %>% mutate(across(where(is.character), as.numeric))
+```
+
+
+```{r, eval=FALSE}
+m<-t(t3) %>% as.matrix()
+
+
+ggplotify::as.ggplot(pheatmap::pheatmap(m, cluster_rows = FALSE, color = viridis::viridis(3,option="magma", alpha=0.9),
+                   labels_col = mtot$`Tributary/Collection Location`, labels_row = colnames(t3), fontsize_row = 8, fontsize_col = 4)) +
+  theme(plot.title = element_text(hjust=0.5))
+
+ggsave("outputs/103/pc2-heatmap.pdf", width=22, height=8)
+ggsave("outputs/103/pc2-heatmap.jpeg", width=22, height=8)
+
 ```
