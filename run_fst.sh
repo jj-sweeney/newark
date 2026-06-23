@@ -14,5 +14,5 @@ vcftools --vcf outputs/101.2/pruned-nwrk.vcf --weir-fst-pop poplists/ColdCreekRe
 	--weir-fst-pop poplists/NN3_Mid.txt \
 	--weir-fst-pop poplists/NN3_North.txt \
 	--weir-fst-pop poplists/NN4.txt \
-	--out outputs/105
+	--out outputs/105/
 	
