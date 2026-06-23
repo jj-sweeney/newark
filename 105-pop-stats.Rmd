@@ -46,7 +46,7 @@ for (pop_name in names(populations)) {
 now using vcftools to calculate global fst
 ```{sh}
 mkdir outputs/105
-sbatch run_fst.sh
+sbatch run_fst_all_nwrk_pops.sh
 ```
 
 
