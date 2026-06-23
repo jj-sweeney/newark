@@ -7,7 +7,8 @@
 
 module load vcftools
 
-vcftools --vcf outputs/101.2/pruned-nwrk.vcf --weir-fst-pop poplists/ColdCreekReservoir.txt \
+vcftools --vcf outputs/101.2/pruned-nwrk.vcf \
+  --weir-fst-pop poplists/ColdCreekReservoir.txt \
 	--weir-fst-pop poplists/NF6.txt \
 	--weir-fst-pop poplists/NN3_Mid.txt \
 	--weir-fst-pop poplists/NN3_North.txt \
