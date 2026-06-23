@@ -1,0 +1,52 @@
+---
+title: "105-pop-stats"
+author: "joe sweeney"
+date: "2026-06-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+loading libs
+```{r, echo=FALSE}
+library(ggtree)
+library(tidyverse)
+library(phangorn)
+```
+
+loading metadata
+```{r}
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+filtered_align <- subset(align496, Dedup > 500000)
+filtered_align <- subset(filtered_align, Cov > 0.1)
+meta<-read_csv("metadata/meta01222025.csv")
+m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
+  mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
+  mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m_fil, Species == "newarkensis" )
+exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
+m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
+```
+
+making txt files for each pop site with a list of all inds found there 
+this is required to calculate Fst using vcf tools
+make a folder called poplists first
+```{r}
+m_nwrk$`Tributary/Collection Location` <- gsub(" ", "", m_nwrk$`Tributary/Collection Location`)
+m_nwrk$`Tributary/Collection Location` <- gsub("'", "", m_nwrk$`Tributary/Collection Location`)
+populations <- split(m_nwrk, m_nwrk$`Tributary/Collection Location`)
+
+for (pop_name in names(populations)) {
+  writeLines(populations[[pop_name]]$GVL_Code, paste0("poplists/", pop_name, ".txt"))
+}
+```
+
+now using vcftools to calculate global fst
+```{sh}
+mkdir outputs/105
+sbatch run_fst.sh
+```
+
+
