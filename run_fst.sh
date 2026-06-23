@@ -23,5 +23,5 @@ vcftools --vcf outputs/101.2/pruned-nwrk.vcf --weir-fst-pop poplists/ColdCreekRe
 	--weir-fst-pop poplists/NV17.txt \
 	--weir-fst-pop poplists/NV18.txt \
 	--weir-fst-pop poplists/NV19.txt \
-	--out outputs/105/
+	--out outputs/105/all_nwrk_pops
 	
