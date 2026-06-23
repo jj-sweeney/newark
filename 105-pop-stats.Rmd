@@ -10,10 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 loading libs
-```{r, echo=FALSE}
-library(ggtree)
+```{r}
 library(tidyverse)
-library(phangorn)
+library(snpR)
 ```
 
 loading metadata
@@ -36,6 +35,8 @@ make a folder called poplists first
 ```{r}
 m_nwrk$`Tributary/Collection Location` <- gsub(" ", "", m_nwrk$`Tributary/Collection Location`)
 m_nwrk$`Tributary/Collection Location` <- gsub("'", "", m_nwrk$`Tributary/Collection Location`)
+m_nwrk$Pop <- gsub(" ", "", m_nwrk$Pop)
+m_nwrk$Pop <- gsub("'", "", m_nwrk$Pop)
 populations <- split(m_nwrk, m_nwrk$`Tributary/Collection Location`)
 
 for (pop_name in names(populations)) {
@@ -44,9 +45,47 @@ for (pop_name in names(populations)) {
 ```
 
 now using vcftools to calculate global fst
-```{sh}
+```{sh eval=FALSE, include=FALSE}
 mkdir outputs/105
 sbatch run_fst_all_nwrk_pops.sh
 ```
+
+
+calculating Tajima's D
+```{sh eval=FALSE, include=FALSE}
+module load vcftools
+vcftools --vcf outputs/101.2/pruned-nwrk.vcf --TajimaD 10000 --out outputs/105/td.nwrk
+```
+
+
+calculating nt diversity 
+  adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
+```{r}
+snps<-import.snpR.data(genotypes = "outputs/101.2/pruned-nwrk.vcf", 
+      sample.meta = m_nwrk %>% select(Pop))
+picalc<-calc_pi(snps,"Pop")
+pi<-get.snpR.stats(picalc,"Pop","pi")
+pidf<-pi$single %>% as_tibble() 
+pidf
+```
+
+```{r}
+piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi))) +
+  geom_boxplot(aes(x=subfacet,y=meanpi, fill=subfacet), alpha=0.75) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  ylab("Pi\n") +
+  xlab("\nPopulation")+
+  scale_x_discrete(labels=sort(unique(m_nwrk$Pop))) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  theme(legend.position = "") +
+  scale_fill_viridis_d(option="magma") +
+  theme(plot.title=element_text(size=16, face="bold"))+
+  theme(axis.title = element_text(size=14, face="bold"))
+
+
+piplot
+```
+
 
 
