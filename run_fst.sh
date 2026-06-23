@@ -4,6 +4,8 @@
 #SBATCH --account=millermrgrp
 #SBATCH --time=8:00:00
 #SBATCH --mem=64G
+#SBATCH --output=fst_%j.out
+#SBATCH --error=fst_%j.err
 
 module load vcftools
 
