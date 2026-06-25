@@ -6,13 +6,13 @@ output: html_document
 ---
 
 loading libs
-```{r include=FALSE}
+```{r}
 library(tidyverse)
 library(snpR)
 ```
 
 loading metadata
-```{r include=FALSE}
+```{r}
 align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
@@ -27,12 +27,31 @@ m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
 
 
 loading snpR data and getting rid of special characters/spaces in Pop
-```{r include=FALSE}
+```{r warning=FALSE}
 m_nwrk$Pop <- gsub(" ", "", m_nwrk$Pop)
 m_nwrk$Pop <- gsub("'", "", m_nwrk$Pop)
 snps<-import.snpR.data(genotypes = "outputs/101.2/pruned-nwrk.vcf", 
       sample.meta = m_nwrk %>% select(Pop))
 ```
+
+calculating Tajima's D
+  first getting chromosome size contigs from bicolor reference 
+```{shell eval=FALSE, include=FALSE}
+cat ~/genomes/genome.fasta.fai | cut -f 1,2 | sort -k 2 -n | awk '$2 > 1e6 {print}' > chroms.txt
+```
+filtering snpR object for contigs from list of 'chromosomes'
+```{r warning=FALSE}
+keep_contigs <- read.table("chroms.txt", header = FALSE)$V1
+snps_chroms <- snps[which(snps@snp.meta$CHROM %in% keep_contigs), ]
+```
+now calculating 
+```{r}
+td_calc <- calc_tajimas_d(snps_chroms, "Pop")
+td <- get.snpR.stats(td_calc, "Pop", stats = "tajimas_d")
+td$weighted.means[,c(2,8)]
+```
+
+
 
 calculating nt diversity 
   adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
@@ -42,7 +61,6 @@ pi<-get.snpR.stats(picalc,"Pop","pi")
 pidf<-pi$single %>% as_tibble() 
 pidf
 ```
-
 
 plotting pi
 ```{r echo=FALSE}
