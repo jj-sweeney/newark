@@ -1,0 +1,88 @@
+---
+title: "105.1-pop-stats-snpR"
+author: "joe sweeney"
+date: "2026-06-24"
+output: html_document
+---
+
+loading libs
+```{r include=FALSE}
+library(tidyverse)
+library(snpR)
+```
+
+loading metadata
+```{r include=FALSE}
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+filtered_align <- subset(align496, Dedup > 500000)
+filtered_align <- subset(filtered_align, Cov > 0.1)
+meta<-read_csv("metadata/meta01222025.csv")
+m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
+  mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
+  mutate(Pop=`Tributary/Collection Location`)
+m_nwrk <- subset(m_fil, Species == "newarkensis" )
+exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
+m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
+```
+
+
+loading snpR data and getting rid of special characters/spaces in Pop
+```{r include=FALSE}
+m_nwrk$Pop <- gsub(" ", "", m_nwrk$Pop)
+m_nwrk$Pop <- gsub("'", "", m_nwrk$Pop)
+snps<-import.snpR.data(genotypes = "outputs/101.2/pruned-nwrk.vcf", 
+      sample.meta = m_nwrk %>% select(Pop))
+```
+
+calculating nt diversity 
+  adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
+```{r}
+picalc<-calc_pi(snps,"Pop")
+pi<-get.snpR.stats(picalc,"Pop","pi")
+pidf<-pi$single %>% as_tibble() 
+pidf
+```
+
+
+plotting pi
+```{r echo=FALSE}
+piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi))) +
+  geom_boxplot(aes(x=subfacet,y=meanpi, fill=subfacet), alpha=0.75) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  ylab("Pi\n") +
+  xlab("\nPopulation")+
+  scale_x_discrete(labels=sort(unique(m_nwrk$Pop))) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  theme(legend.position = "") +
+  scale_fill_viridis_d(option="magma") +
+  theme(plot.title=element_text(size=16, face="bold"))+
+  theme(axis.title = element_text(size=14, face="bold"))
+
+piplot
+```
+
+
+calculating global Fst
+```{r}
+gfst_calc <- calc_global_fst(snps, "Pop")
+gfst <- get.snpR.stats(gfst_calc, "Pop", stats = "fst")
+head(gfst)
+```
+global mean Fst = 0.1364995
+
+
+calculating pairwise Fst
+```{r}
+pwfst_calc <- calc_pairwise_fst(snps, "Pop")
+pwfst <- get.snpR.stats(pwfst_calc, "Pop", stats = "fst")
+```
+plotting pairwise Fst on a heatmap
+```{r echo=FALSE}
+plot_pairwise_fst_heatmap(pwfst_calc, "Pop")
+```
+
+
+
+
+
