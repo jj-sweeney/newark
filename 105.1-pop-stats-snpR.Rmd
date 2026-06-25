@@ -56,7 +56,7 @@ td$weighted.means[,c(2,8)]
 calculating nt diversity 
   adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
 ```{r}
-picalc<-calc_pi(snps,"Pop")
+picalc<-calc_pi(snps_chroms,"Pop")
 pi<-get.snpR.stats(picalc,"Pop","pi")
 pidf<-pi$single %>% as_tibble() 
 pidf
@@ -81,18 +81,19 @@ piplot
 ```
 
 
+
 calculating global Fst
 ```{r}
-gfst_calc <- calc_global_fst(snps, "Pop")
+gfst_calc <- calc_global_fst(snps_chroms, "Pop")
 gfst <- get.snpR.stats(gfst_calc, "Pop", stats = "fst")
-head(gfst)
+gfst$weighted.means
 ```
-global mean Fst = 0.1364995
+global mean Fst ~ 0.14
 
 
 calculating pairwise Fst
 ```{r}
-pwfst_calc <- calc_pairwise_fst(snps, "Pop")
+pwfst_calc <- calc_pairwise_fst(snps_chroms, "Pop")
 pwfst <- get.snpR.stats(pwfst_calc, "Pop", stats = "fst")
 ```
 plotting pairwise Fst on a heatmap
