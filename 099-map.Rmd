@@ -29,14 +29,14 @@ states_ll <- st_transform(states, 4326)
 nevada <- states[states_ll$State_Name == "NEVADA",]
 ```
 
-Plot sites on whole state
+Plot sites on whole state using ggplot
 ```{r echo=FALSE}
 ggplot() +
   geom_sf(data = nevada) + 
   geom_sf(data = sites_ll)
 ```
 
-
+interactive map of sampling sites using leaflet
 ```{r echo=FALSE}
 map <- leaflet(sites_ll) %>%
   addProviderTiles(providers$Esri.WorldImagery) %>%
