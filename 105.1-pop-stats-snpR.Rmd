@@ -2,17 +2,25 @@
 title: "105.1-pop-stats-snpR"
 author: "joe sweeney"
 date: "2026-06-24"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 loading libs
-```{r}
+
+```{r message=FALSE}
 library(tidyverse)
 library(snpR)
 ```
 
 loading metadata
-```{r}
+
+```{r message=FALSE}
 align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
@@ -25,45 +33,48 @@ exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
 m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
 ```
 
-
 loading snpR data and getting rid of special characters/spaces in Pop
-```{r warning=FALSE}
+
+```{r message=FALSE, warning=FALSE}
 m_nwrk$Pop <- gsub(" ", "", m_nwrk$Pop)
 m_nwrk$Pop <- gsub("'", "", m_nwrk$Pop)
 snps<-import.snpR.data(genotypes = "outputs/101.2/pruned-nwrk.vcf", 
       sample.meta = m_nwrk %>% select(Pop))
 ```
 
-calculating Tajima's D
-  first getting chromosome size contigs from bicolor reference 
+calculating Tajima's D first getting chromosome size contigs from bicolor reference
+
 ```{shell eval=FALSE, include=FALSE}
 cat ~/genomes/genome.fasta.fai | cut -f 1,2 | sort -k 2 -n | awk '$2 > 1e6 {print}' > chroms.txt
 ```
+
 filtering snpR object for contigs from list of 'chromosomes'
-```{r warning=FALSE}
+
+```{r message=FALSE, warning=FALSE}
 keep_contigs <- read.table("chroms.txt", header = FALSE)$V1
 snps_chroms <- snps[which(snps@snp.meta$CHROM %in% keep_contigs), ]
 ```
-now calculating 
-```{r}
+
+now calculating
+
+```{r warning=FALSE}
 td_calc <- calc_tajimas_d(snps_chroms, "Pop")
 td <- get.snpR.stats(td_calc, "Pop", stats = "tajimas_d")
 td$weighted.means[,c(2,8)]
 ```
 
+calculating nt diversity adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
 
-
-calculating nt diversity 
-  adapted from github.com/MacCampbell/lates-wgs/108-wgs-snps.Rmd
 ```{r}
 picalc<-calc_pi(snps_chroms,"Pop")
 pi<-get.snpR.stats(picalc,"Pop","pi")
 pidf<-pi$single %>% as_tibble() 
-pidf
+head(pidf)
 ```
 
 plotting pi
-```{r echo=FALSE}
+
+```{r echo=FALSE, message=FALSE}
 piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi))) +
   geom_boxplot(aes(x=subfacet,y=meanpi, fill=subfacet), alpha=0.75) +
   theme_bw() +
@@ -80,28 +91,25 @@ piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi)))
 piplot
 ```
 
-
-
 calculating global Fst
+
 ```{r}
 gfst_calc <- calc_global_fst(snps_chroms, "Pop")
 gfst <- get.snpR.stats(gfst_calc, "Pop", stats = "fst")
 gfst$weighted.means
 ```
-global mean Fst ~ 0.14
 
+global mean Fst \~ 0.14
 
 calculating pairwise Fst
-```{r}
+
+```{r , message=FALSE}
 pwfst_calc <- calc_pairwise_fst(snps_chroms, "Pop")
 pwfst <- get.snpR.stats(pwfst_calc, "Pop", stats = "fst")
 ```
+
 plotting pairwise Fst on a heatmap
-```{r echo=FALSE}
+
+```{r echo=FALSE, fig.width=12, fig.height=10}
 plot_pairwise_fst_heatmap(pwfst_calc, "Pop")
 ```
-
-
-
-
-
