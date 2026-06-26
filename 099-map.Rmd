@@ -18,7 +18,7 @@ library(htmlwidgets)
 ```
 
 loading shapefile data
-```{r message=FALSE}
+```{r results='hide'}
 sites <-leafletsites <- st_read("map-data/2022_Collections/2022_Collections.shp")
 #transform to WGS84 (lat/lon) for ggplot2
 sites_ll <- st_transform(sites, 4326)
@@ -37,7 +37,7 @@ ggplot() +
 ```
 
 interactive map of sampling sites using leaflet
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 map <- leaflet(sites_ll) %>%
   addProviderTiles(providers$Esri.WorldImagery) %>%
   addPolygons(data = nevada,
