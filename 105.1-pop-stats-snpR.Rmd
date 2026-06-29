@@ -80,7 +80,7 @@ piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi)))
   theme_bw() +
   theme(panel.grid = element_blank()) +
   ylab("Pi\n") +
-  xlab("\nPopulation")+
+  xlab("\nSampling Site")+
   scale_x_discrete(labels=sort(unique(m_nwrk$Pop))) +
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   theme(legend.position = "") +
