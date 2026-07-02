@@ -15,12 +15,21 @@ align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Ded
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
+
 m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
-  mutate(Pop=`Tributary/Collection Location`)
+  mutate(Pop=`Tributary/Collection Location`) 
+
+western_pops <- unique(m_fil$Pop[!(m_fil$Pop %in% c("NV12", "NV17", "NV18", "NV19"))])
+NV17_19 <- c("NV17", "NV18", "NV19")
+
+m_fil <- m_fil %>% mutate(Lineage = case_when(Pop %in% western_pops ~ "West", 
+                                              Pop %in% NV17_19 ~ "NV17-19",
+                                              Pop == "NV12" ~ "NV12"))
+
 m_nwrk <- subset(m_fil, Species == "newarkensis" )
-exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
-m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
+
+m_nwrk_west <- subset(m_nwrk, Pop %in% western_pops)
 ```
 
 sampling max 5 inds from each site for making trimmed phylogeny later 
@@ -94,13 +103,12 @@ re-rooting at midpoint
 ```{r}
 fil_tre_s_m <- midpoint(fil_tre_s, node.labels = "support")
 t1m <- ggtree(fil_tre_s_m) %<+% df_sampled +
-  geom_tippoint(aes(color = Species), cex = 4, alpha = 0.7) +
-  geom_nodepoint(aes(subset = as.numeric(label) > 95), size = 2, color = "darkgray") +
-  geom_treescale() + 
-  labs(color = "Species") +
-  theme(legend.title    = element_text(size = 14, face = "bold"),
-        legend.text     = element_text(size = 12),
-        legend.key.size = unit(1.2, "lines"))
+  geom_tippoint(aes(color = Lineage), cex = 5, alpha = 0.9) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 95), size = 2, shape = 21, 
+                 fill = "gray", color = "black") +
+  geom_treescale(y = -3, fontsize = 6) + 
+  scale_color_brewer(palette = "Set2")
+
 t1m
 ```
 
