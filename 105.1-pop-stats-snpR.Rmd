@@ -25,12 +25,21 @@ align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Ded
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
+
 m_fil <-left_join(filtered_align,meta, by="Ind") %>% 
   mutate(Path=paste0("data/",Ind,".sort.flt.bam")) %>% 
-  mutate(Pop=`Tributary/Collection Location`)
+  mutate(Pop=`Tributary/Collection Location`) 
+
+western_pops <- unique(m_fil$Pop[!(m_fil$Pop %in% c("NV12", "NV17", "NV18", "NV19"))])
+NV17_19 <- c("NV17", "NV18", "NV19")
+
+m_fil <- m_fil %>% mutate(Lineage = case_when(Pop %in% western_pops ~ "West", 
+                                              Pop %in% NV17_19 ~ "NV17-19",
+                                              Pop == "NV12" ~ "NV12"))
+
 m_nwrk <- subset(m_fil, Species == "newarkensis" )
-exclude_sites <- c("NV12", "NV17", "NV18", "NV19")
-m_nwrk_west <- subset(m_nwrk, !Pop %in% exclude_sites)
+
+m_nwrk_west <- subset(m_nwrk, Pop %in% western_pops)
 ```
 
 loading snpR data and getting rid of special characters/spaces in Pop
@@ -82,10 +91,26 @@ piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi)))
   theme(panel.grid = element_blank()) +
   ylab("Pi\n") +
   xlab("\nSampling Site")+
-  scale_x_discrete(labels=sort(unique(m_nwrk$Pop))) +
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   theme(legend.position = "") +
-  scale_fill_viridis_d(option="magma") +
+  scale_fill_manual(values = c(
+    "NV12"               = "#66c2a5",  
+    "NV17"               = "#FC8D62FF",  
+    "NV18"               = "#FC8D62FF",
+    "NV19"               = "#FC8D62FF",
+    "ColdCreekReservoir" = "#8DA0CBFF",  
+    "NF6"                = "#8DA0CBFF",
+    "NN3_Mid"            = "#8DA0CBFF",
+    "NN3_North"          = "#8DA0CBFF",
+    "NN4"                = "#8DA0CBFF",
+    "NV1"                = "#8DA0CBFF",
+    "NV16"               = "#8DA0CBFF",
+    "NV2"                = "#8DA0CBFF",
+    "NV5"                = "#8DA0CBFF",
+    "NV6"                = "#8DA0CBFF",
+    "NV7"                = "#8DA0CBFF",
+    "NV9"                = "#8DA0CBFF"
+  )) +
   theme(plot.title=element_text(size=16, face="bold"))+
   theme(axis.title = element_text(size=14, face="bold"))
 
@@ -111,6 +136,6 @@ pwfst <- get.snpR.stats(pwfst_calc, "Pop", stats = "fst")
 
 plotting pairwise Fst on a heatmap
 
-```{r echo=FALSE, fig.width=12, fig.height=10}
-plot_pairwise_fst_heatmap(pwfst_calc, "Pop")
+```{r echo=FALSE}
+plot_pairwise_fst_heatmap(pwfst_calc, "Pop", print_fst = FALSE)
 ```
