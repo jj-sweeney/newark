@@ -94,22 +94,22 @@ piplot<-ggplot(pidf %>% group_by(subfacet,CHROM) %>% summarize(meanpi=mean(pi)))
   theme(axis.text.x = element_text(angle=45, hjust=1)) +
   theme(legend.position = "") +
   scale_fill_manual(values = c(
-    "NV12"               = "#66c2a5",  
-    "NV17"               = "#FC8D62FF",  
-    "NV18"               = "#FC8D62FF",
-    "NV19"               = "#FC8D62FF",
+    "NV12"= "#66c2a5",  
+    "NV17" = "#FC8D62FF",  
+    "NV18" = "#FC8D62FF",
+    "NV19" = "#FC8D62FF",
     "ColdCreekReservoir" = "#8DA0CBFF",  
-    "NF6"                = "#8DA0CBFF",
-    "NN3_Mid"            = "#8DA0CBFF",
-    "NN3_North"          = "#8DA0CBFF",
-    "NN4"                = "#8DA0CBFF",
-    "NV1"                = "#8DA0CBFF",
-    "NV16"               = "#8DA0CBFF",
-    "NV2"                = "#8DA0CBFF",
-    "NV5"                = "#8DA0CBFF",
-    "NV6"                = "#8DA0CBFF",
-    "NV7"                = "#8DA0CBFF",
-    "NV9"                = "#8DA0CBFF"
+    "NF6" = "#8DA0CBFF",
+    "NN3_Mid" = "#8DA0CBFF",
+    "NN3_North" = "#8DA0CBFF",
+    "NN4" = "#8DA0CBFF",
+    "NV1" = "#8DA0CBFF",
+    "NV16" = "#8DA0CBFF",
+    "NV2" = "#8DA0CBFF",
+    "NV5" = "#8DA0CBFF",
+    "NV6" = "#8DA0CBFF",
+    "NV7" = "#8DA0CBFF",
+    "NV9" = "#8DA0CBFF"
   )) +
   theme(plot.title=element_text(size=16, face="bold"))+
   theme(axis.title = element_text(size=14, face="bold"))
@@ -137,5 +137,10 @@ pwfst <- get.snpR.stats(pwfst_calc, "Pop", stats = "fst")
 plotting pairwise Fst on a heatmap
 
 ```{r echo=FALSE}
-plot_pairwise_fst_heatmap(pwfst_calc, "Pop", print_fst = FALSE)
+fst_hm <- plot_pairwise_fst_heatmap(pwfst_calc, "Pop", print_fst = FALSE) + 
+          theme(axis.text.x = element_text(face = "bold", size = 12)) +
+          theme(axis.text.y = element_text(face = "bold", size = 12))
+
+  
+fst_hm
 ```
