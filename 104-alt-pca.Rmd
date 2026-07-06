@@ -25,6 +25,13 @@ fish<-read_tsv("bamlists/nwrk.names", col_names = c("GVL_Code"))
 mtot<-read_csv("metadata/meta01222025.csv")
 meta<-fish %>% left_join(mtot)
 meta
+
+western_pops <- unique(meta$`Tributary/Collection Location`[!(meta$`Tributary/Collection Location` %in% c("NV12", "NV17", "NV18", "NV19"))])
+NV17_19 <- c("NV17", "NV18", "NV19")
+
+meta <- meta %>% mutate(Lineage = case_when(`Tributary/Collection Location` %in% western_pops ~ "West", 
+                                              `Tributary/Collection Location` %in% NV17_19 ~ "NV17-19",
+                                              `Tributary/Collection Location` == "NV12" ~ "NV12"))
 ```
 
 
@@ -62,22 +69,34 @@ a
 
 ```{r}
 pc12<-ggplot(df) + 
-  geom_point(aes(x=Axis1, y=Axis2, fill=`Tributary/Collection Location`),pch=21, alpha=0.75, cex=2) +
+  geom_point(aes(x=Axis1, y=Axis2, fill=Lineage),pch=21, alpha=0.75, cex=2) +
   theme_bw() +
   xlab(paste0("PC1 ",round(eig[1],2), "%")) +
   ylab(paste0("PC2 ",round(eig[2],2), "%")) +
   theme(panel.grid = element_blank()) +
-  scale_fill_viridis_d(option="H") +
+  scale_color_manual(values = c(
+    "NV12" = "#66c2a5",
+    "NV17" = "#FC8D62FF",  
+    "NV18" = "#FC8D62FF",
+    "NV19" = "#FC8D62FF",
+    "West" = "#8DA0CBFF"
+  )) + 
   guides(fill = guide_legend(override.aes = list(pch = 22))) +
   theme(legend.position = "none") 
   
 pc13<-ggplot(df) + 
-  geom_point(aes(x=Axis1, y=Axis3, fill=`Tributary/Collection Location`),pch=21, alpha=0.75, cex=2) +
+  geom_point(aes(x=Axis1, y=Axis3, fill=Lineage),pch=21, alpha=0.75, cex=2) +
   theme_bw() +
   xlab(paste0("PC1 ",round(eig[1],2), "%")) +
   ylab(paste0("PC3 ",round(eig[3],2), "%")) +
   theme(panel.grid = element_blank()) +
-  scale_fill_viridis_d(option="H") +
+  scale_color_manual(values = c(
+    "NV12" = "#66c2a5",
+    "NV17" = "#FC8D62FF",  
+    "NV18" = "#FC8D62FF",
+    "NV19" = "#FC8D62FF",
+    "West" = "#8DA0CBFF"
+  )) + 
   guides(fill = guide_legend(override.aes = list(pch = 22))) +
   theme(legend.position = "right") 
 pc12
