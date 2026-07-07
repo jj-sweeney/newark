@@ -74,11 +74,9 @@ pc12<-ggplot(df) +
   xlab(paste0("PC1 ",round(eig[1],2), "%")) +
   ylab(paste0("PC2 ",round(eig[2],2), "%")) +
   theme(panel.grid = element_blank()) +
-  scale_color_manual(values = c(
+  scale_fill_manual(values = c(
     "NV12" = "#66c2a5",
-    "NV17" = "#FC8D62FF",  
-    "NV18" = "#FC8D62FF",
-    "NV19" = "#FC8D62FF",
+    "NV17-19" = "#FC8D62FF",  
     "West" = "#8DA0CBFF"
   )) + 
   guides(fill = guide_legend(override.aes = list(pch = 22))) +
@@ -90,11 +88,9 @@ pc13<-ggplot(df) +
   xlab(paste0("PC1 ",round(eig[1],2), "%")) +
   ylab(paste0("PC3 ",round(eig[3],2), "%")) +
   theme(panel.grid = element_blank()) +
-  scale_color_manual(values = c(
+  scale_fill_manual(values = c(
     "NV12" = "#66c2a5",
-    "NV17" = "#FC8D62FF",  
-    "NV18" = "#FC8D62FF",
-    "NV19" = "#FC8D62FF",
+    "NV17-19" = "#FC8D62FF",  
     "West" = "#8DA0CBFF"
   )) + 
   guides(fill = guide_legend(override.aes = list(pch = 22))) +
