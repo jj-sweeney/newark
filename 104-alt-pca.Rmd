@@ -53,7 +53,7 @@ eig<-pca1$eig/sum(pca1$eig)*100
 ```{r}
 screedf<-as_tibble(eig) %>% mutate(PC = 1:n()) %>% rename(Var=value)
 
-screedf <- screedf %>% relocate(PC) %>% head(n=20)
+screedf <- screedf %>% relocate(PC) %>% head(n=10)
 
 a<-ggplot(screedf) +
   geom_line(aes(x=PC, y=Var)) +
