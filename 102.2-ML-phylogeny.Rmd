@@ -23,9 +23,13 @@ m_fil <-left_join(filtered_align,meta, by="Ind") %>%
 western_pops <- unique(m_fil$Pop[!(m_fil$Pop %in% c("NV12", "NV17", "NV18", "NV19"))])
 NV17_19 <- c("NV17", "NV18", "NV19")
 
-m_fil <- m_fil %>% mutate(Lineage = case_when(Pop %in% western_pops ~ "West", 
+m_fil <- m_fil %>% mutate(Lineage = case_when(Species == "isolatus" ~ "isolatus",
+                                              Species == "thalassinus" ~ "thalassinus",
+                                              Species == "bicolor" ~ "bicolor",
+                                              Pop %in% western_pops ~ "West", 
                                               Pop %in% NV17_19 ~ "NV17-19",
-                                              Pop == "NV12" ~ "NV12"))
+                                              Pop == "NV12" ~ "NV12"
+                                             ))
 
 m_nwrk <- subset(m_fil, Species == "newarkensis" )
 
@@ -100,14 +104,20 @@ t1s
 ```
 
 re-rooting at midpoint 
-```{r}
+```{r warning = FALSE}
 fil_tre_s_m <- midpoint(fil_tre_s, node.labels = "support")
 t1m <- ggtree(fil_tre_s_m) %<+% df_sampled +
   geom_tippoint(aes(color = Lineage), cex = 5, alpha = 0.9) +
   geom_nodepoint(aes(subset = as.numeric(label) > 95), size = 2, shape = 21, 
                  fill = "gray", color = "black") +
   geom_treescale(y = -3, fontsize = 6) + 
-  scale_color_brewer(palette = "Set2")
+  scale_color_manual(values = c(
+    "NV12" = "#66c2a5",
+    "NV17-19" = "#FC8D62FF",  
+    "West" = "#8DA0CBFF",
+    "bicolor" = "darkgray",
+    "thalassinus" = "gray",
+    "isolatus" = "lightgray")) 
 
 t1m
 ```
