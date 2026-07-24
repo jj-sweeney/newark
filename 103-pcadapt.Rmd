@@ -11,22 +11,33 @@ library(tidyverse)
 
 
 making a scree plot to determine optimal K
-```{r}
+```{r,eval=FALSE}
 path <- read.pcadapt("outputs/101.2/pruned-nwrk.vcf", type = "vcf")
 
 # scree plot first
 x_temp <- pcadapt(path, K = 20, min.maf = 0.01)
+save(x_temp, file="outputs/103/x_temp.rda")
+```
+
+```{r}
+load("outputs/103/x_temp.rda")
 plot(x_temp, option = "screeplot")
 ```
 
 Based on the optimal K from scree plot (3 in this case) run pcadapt
-```{r}
+```{r, eval=FALSE}
 x <- pcadapt(path, K = 3, min.maf = 0.01)
+save(x, file="outputs/103/x.rda")
+```
+
+```{r}
+load("outputs/103/x.rda")
 var<-round(x$singular.values^2*100,2)
 
 summary(x)
 plot(x , option = "manhattan")
 plot(x, option = "qqplot")
+
 ```
 
 
@@ -50,6 +61,8 @@ m<-mtot
 pcadata<-x$scores[,1:3] %>% as_tibble()
 pcadata<-pcadata %>% bind_cols(m)
 
+write_csv(pcadata, file="outputs/103/pcadata.csv")
+pcadata<-read_csv("outputs/103/pcadata.csv")
 ```
 
 ```{r}
