@@ -1,0 +1,59 @@
+---
+title: "106-admixture"
+author: "joe sweeney"
+date: "2026-10-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+https://speciationgenomics.github.io/ADMIXTURE/
+converting vcf files to .bed
+```{sh, eval = FALSE}
+mkdir outputs/106
+module load plink
+plink --vcf outputs/101.2/pruned-nwrk.vcf --make-bed --out outputs/106/pruned-nwrk --double-id --allow-extra-chr
+awk '{$1="0";print $0}' outputs/106/pruned-nwrk.bim > outputs/106/pruned-nwrk.bim.tmp
+mv outputs/106/pruned-nwrk.bim.tmp outputs/106/pruned-nwrk.bim
+```
+
+Doing cross validation for Ks 1-5
+```{sh, eval = FALSE}
+for K in 1 2 3 4 5; \
+do admixture --cv pruned-nwrk.bed $K | tee log${K}.out; done
+
+grep -h CV log*.out
+```
+
+rerunning with Ks 5-10
+```{sh, eval = FALSE}
+for K in 6 7 8 9 10; \
+do admixture --cv pruned-nwrk.bed $K | tee log${K}.out; done
+
+grep -h CV log*.out
+grep -h CV log*.out | cut -f 3,4 -d ' '  | perl -pe 's/://g' | perl -pe s'/\(|\)//g' > scores.txt 
+```
+
+
+Lowest value is now for K = 9, plotting scores
+```{r}
+scores <- read_delim("outputs/106/scores.txt", col_names = c("K", "Cross-Validation Error")) %>%
+  mutate(K = as.integer(gsub("[^0-9]", "", K))) %>%
+  arrange(K)
+
+ggplot(scores, aes(x = K, y = `Cross-Validation Error`)) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  scale_x_continuous(breaks = scores$K)
+
+```
+
+
