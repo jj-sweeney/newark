@@ -40,15 +40,15 @@ m_nwrk %>% select(Path) %>% write_tsv("bamlists/nwrk.bamlist", col_names = FALSE
 m_nwrk %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk.names", col_names = FALSE)
 m_nwrk_west %>% select(Path) %>% write_tsv("bamlists/nwrk_west.bamlist", col_names = FALSE)
 m_nwrk_west %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk_west.names", col_names = FALSE)
-m_nwrk_17_19 %>% select(Path) %>% write_tsv("bamlists/nwrk__17_19.bamlist", col_names = FALSE)
-m_nwrk_17_19 %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk__17_19.names", col_names = FALSE)
+m_nwrk_17_19 %>% select(Path) %>% write_tsv("bamlists/nwrk_17_19.bamlist", col_names = FALSE)
+m_nwrk_17_19 %>% select(GVL_Code) %>% write_tsv("bamlists/nwrk_17_19.names", col_names = FALSE)
 ```
 
 now doing snp discovery in RAD-projects/newark using all contigs 
   from s bicolor reference
 ```{sh, eval=FALSE}
 mkdir outputs/101.2
-n_ind=$(wc -l < bamlists/fil.bamlist)
+n_ind=$(wc -l < bamlists/nwrk_17_19.bamlist)
 min_ind=$(( n_ind * 9 / 10 ))
 echo $min_ind
 sbatch run_angsd.sh 
