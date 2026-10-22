@@ -26,7 +26,7 @@ I have 10 alignments in data from Cold Creak Reservoir in data. I'll set up some
 now using all 483 individuals (filtering for those with greater than 1E6 reads) -js20260225
 
 ```{r}
-align496<-read_csv("../outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
+align496<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads","Dedup","Cov"))
 filtered_align <- subset(align496, Dedup > 500000)
 filtered_align <- subset(filtered_align, Cov > 0.1)
 meta<-read_csv("metadata/meta01222025.csv")
