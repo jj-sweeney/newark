@@ -9,6 +9,6 @@
 module load angsd
 angsd -nthreads 12 \
 -minInd 63 -bam bamlists/nwrk_17_19.bamlist -out outputs/101.2/snps-nwrk_17_19 \
--ref /home/jsweeney/newark/genomes/genome.fasta \
+-ref /home/jsweeney/genomes/genome.fasta \
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
 -doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 > outputs/101.2/snps-nwrk_17_19.out 2> outputs/101.2/snps-nwrk_17_19.err

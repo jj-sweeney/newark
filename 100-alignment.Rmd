@@ -70,7 +70,7 @@ cat *.stats > align-496.csv
 moving locally to outputs/100
 
 ```{r}
-align<-read_csv("/Users/joesweeney/Desktop/outputs/100/align-496.csv", col_names = c("Ind","Reads2","Dedup2","Coverage2"))
+align<-read_csv("outputs/100/align-496.csv", col_names = c("Ind","Reads2","Dedup2","Coverage2"))
 # to compare against our previous alignments, I imagine this will be more instructive with the Siphateles genome
 # Data frame could also be made tidy with "reference genome option"
 
