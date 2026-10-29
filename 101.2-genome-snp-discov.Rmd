@@ -57,15 +57,15 @@ sbatch run_angsd.sh
 converting to vcf
 ```{sh, eval=FALSE}
 module load plink
-plink --tped outputs/101.2/snps-fil.tped --tfam outputs/101.2/snps-fil.tfam --out outputs/101.2/plink-binary --recode --allow-extra-chr --noweb
+plink --tped outputs/101.2/snps-nwrk_17_19.tped --tfam outputs/101.2/snps-nwrk_17_19.tfam --out outputs/101.2/plink-binary --recode --allow-extra-chr --noweb
 plink --ped outputs/101.2/plink-binary.ped --map outputs/101.2/plink-binary.map --recode vcf --allow-extra-chr -out outputs/101.2/plink
 module load tabix
 bgzip outputs/101.2/plink.vcf
 tabix outputs/101.2/plink.vcf.gz
 module load bcftools
-bcftools reheader --samples bamlists/fil.names outputs/101.2/plink.vcf.gz > outputs/101.2/renamed_fil.vcf.gz
+bcftools reheader --samples bamlists/nwrk_17_19.names outputs/101.2/plink.vcf.gz > outputs/101.2/renamed_nwrk_17_19.vcf.gz
 module load tabix
-tabix outputs/101.2/renamed_fil.vcf.gz
+tabix outputs/101.2/renamed_nwrk_17_19.vcf.gz
 ```
 
 filtering snps in LD
@@ -82,16 +82,20 @@ bcftools +fill-tags outputs/101.2/renamed_nwrk.vcf.gz  -- -t MAF,F_MISSING | bcf
 bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned-nwrk_west.vcf
 
 bcftools +fill-tags outputs/101.2/renamed_nwrk_west.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand-nwrk_west.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk_17_19.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode maxAF  > outputs/101.2/pruned-nwrk_17_19.vcf
+
+bcftools +fill-tags outputs/101.2/renamed_nwrk_17_19.vcf.gz  -- -t MAF,F_MISSING | bcftools view -i 'F_MISSING < 0.05' | bcftools view -i 'INFO/MAF > 0.05' |  bcftools +prune -m 0.20 -w 50kb --nsites-per-win 1 --nsites-per-win-mode rand  > outputs/101.2/pruned-rand-nwrk_17_19.vcf
 ```
 
 moving to local storage
 ```{sh, eval=FALSE}
-gzip -k pruned.vcf
-scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD-projects/newark/outputs/101.2/pruned.vcf.gz
+gzip -k pruned-nwrk_17_19.vcf
+scp jsweeney@farm.hpc.ucdavis.edu:/group/ajfingergrp/RAD_projects/newark/outputs/101.2/pruned-nwrk_17_19.vcf.gz
 ```
 
 ```{r}
-snps<-import.snpR.data(genotypes = "outputs/101.2/pruned.vcf.gz", 
+snps<-import.snpR.data(genotypes = "outputs/101.2/pruned-fil.vcf", 
       sample.meta = m_fil %>% select(Pop))
 
 pca<-plot_clusters(snps)
@@ -264,5 +268,28 @@ ggplot(df_nwrk_west) +
   xlab(paste0("PC1 (",pca_nwrk_west$pca_loadings[1],"%)")) +
   ylab(paste0("PC2 (",pca_nwrk_west$pca_loadings[2],"%)")) +
   ggtitle("newarkensis western cluster only snp discovery") +
+  theme(plot.title = element_text(hjust=0.5))
+```
+
+
+-------------------------------------------------------------------------------
+now only NV17-19
+```{r}
+snps_17_19 <-import.snpR.data(genotypes = "outputs/101.2/pruned-nwrk_17_19.vcf.gz", 
+      sample.meta = m_nwrk_17_19 %>% select(Pop))
+
+pca_17_19<-plot_clusters(snps)
+pca_17_19$plots
+```
+
+```{r}
+df_nwrk_17_19<-pca_17_19$data$pca
+ggplot(df_nwrk_17_19) +
+  geom_point(aes(x=PC1, y=PC2, fill=Pop), pch=21) +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  xlab(paste0("PC1 (",pca_17_19$pca_loadings[1],"%)")) +
+  ylab(paste0("PC2 (",pca_17_19$pca_loadings[2],"%)")) +
+  ggtitle("newarkensis NV17-19 only snp discovery") +
   theme(plot.title = element_text(hjust=0.5))
 ```
