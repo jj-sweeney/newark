@@ -6,8 +6,5 @@
 #SBATCH --mem=128G
 #SBATCH --cpus-per-task=12
 
-iqtree -s outputs/102.2/pruned-nwrk.min4.phy -st DNA -B 1000 -nt 12
-iqtree -s outputs/102.2/pruned-nwrk_west.min4.phy -st DNA -B 1000 -nt 12
-iqtree -s outputs/102.2/pruned-rand-fil.min4.phy -st DNA -B 1000 -nt 12
-iqtree -s outputs/102.2/pruned-rand-nwrk.min4.phy -st DNA -B 1000 -nt 12
-iqtree -s outputs/102.2/pruned-rand-nwrk_west.min4.phy -st DNA -B 1000 -nt 12
+iqtree -s outputs/102.2/pruned-nwrk_17_19.min4.phy -st DNA -B 1000 -nt 12
+iqtree -s outputs/102.2/pruned-rand-nwrk_17_19.min4.phy -st DNA -B 1000 -nt 12
