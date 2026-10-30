@@ -123,7 +123,7 @@ t1m <- ggtree(fil_tre_s_m) %<+% df_sampled +
 
 t1m
 ```
-
+--------------------------------------------------------------------------------
 making tree for just newarkensis with color by sample site 
 ```{r}
 nwrk_tre <- read.tree("outputs/102.2/pruned-nwrk.min4.phy.treefile")
@@ -186,3 +186,48 @@ t3s <- ggtree(nwrk_tre_s) %<+% df_sampled +
   geom_treescale()
 t3s
 ```
+rooting at midpoint again 
+```{r}
+nwrk_tre_s_m <- midpoint(nwrk_tre_s, node.labels = "support")
+t3m <- ggtree(nwrk_tre_s_m) %<+% df_sampled +
+  geom_tippoint(aes(color = Pop), cex = 5, alpha = 0.7) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 95),
+                 size = 3, shape = 21, fill = "gray", color = "black") +
+  geom_treescale(y = -2, fontsize = 3.5) +
+  labs(color = "Sampling Site") +
+  theme(legend.title    = element_text(size = 14, face = "bold"),
+        legend.text     = element_text(size = 12),
+        legend.key.size = unit(1.2, "lines"))
+t3m
+```
+--------------------------------------------------------------------------------
+now for just NV17-19
+```{r}
+NV17_19_tre <- read.tree("outputs/102.2/pruned-nwrk_17_19.min4.phy.treefile")
+df_17_19 <- relocate(m_nwrk_17_19, GVL_Code) %>% rename(label = GVL_Code)
+t4 <- ggtree(NV17_19_tre) %<+% df_17_19 +
+  geom_tippoint(aes(color = Pop), cex = 5, alpha = 0.7) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 95),
+                 size = 3, shape = 21, fill = "gray", color = "black") +
+  geom_treescale(y = -2, fontsize = 3.5) +
+  labs(color = "Sampling Site") +
+  theme(legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(1.2, "lines"))
+t4
+```
+
+```{r}
+NV17_19_tre_m <- midpoint(NV17_19_tre, node.labels = "support")
+t4m <- ggtree(NV17_19_tre_m) %<+% df_17_19 +
+  geom_tippoint(aes(color = Pop), cex = 5, alpha = 0.7) +
+  geom_nodepoint(aes(subset = as.numeric(label) > 95),
+                 size = 3, shape = 21, fill = "gray", color = "black") +
+  geom_treescale(y = -2, fontsize = 3.5) +
+  labs(color = "Sampling Site") +
+  theme(legend.title = element_text(size = 14, face = "bold"),
+        legend.text = element_text(size = 12),
+        legend.key.size = unit(1.2, "lines"))
+t4m
+```
+
