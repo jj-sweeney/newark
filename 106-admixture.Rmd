@@ -61,15 +61,15 @@ ggplot(scores, aes(x = K, y = `Cross-Validation Error`)) +
 now only NV17,18,19
 ```{sh, eval = FALSE}
 module load plink
-plink --vcf outputs/101.2/pruned-nwrk_17_19.vcf --make-bed --out outputs/106/pruned-nwrk_17_19 --double-id --allow-extra-chr
-awk '{$1="0";print $0}' outputs/106/pruned-nwrk_17_19.bim > outputs/106/pruned-nwrk_17_19.bim.tmp
-mv outputs/106/pruned-nwrk_17_19.bim.tmp outputs/106/pruned-nwrk_17_19.bim
+plink --vcf outputs/101.2/pruned-nwrk_west.vcf --make-bed --out outputs/106/pruned-nwrk_west --double-id --allow-extra-chr
+awk '{$1="0";print $0}' outputs/106/pruned-nwrk_west.bim > outputs/106/pruned-nwrk_west.bim.tmp
+mv outputs/106/pruned-nwrk_west.bim.tmp outputs/106/pruned-nwrk_west.bim
 ```
 
 Doing cross validation for Ks 1-5
 ```{sh, eval = FALSE}
 for K in 1 2 3 4 5; \
-do admixture --cv pruned-nwrk_17_19.bed $K | tee log${K}.out; done
+do admixture --cv pruned-nwrk_west.bed $K | tee log${K}.out; done
 
 grep -h CV log*.out
 ```
@@ -77,16 +77,16 @@ grep -h CV log*.out
 rerunning with Ks 5-10
 ```{sh, eval = FALSE}
 for K in 6 7 8 9 10; \
-do admixture --cv pruned-nwrk_17_19.bed $K | tee log${K}.out; done
+do admixture --cv pruned-nwrk_west.bed $K | tee log${K}.out; done
 
 grep -h CV log*.out
-grep -h CV log*.out | cut -f 3,4 -d ' '  | perl -pe 's/://g' | perl -pe s'/\(|\)//g' > scores_17_19.txt 
+grep -h CV log*.out | cut -f 3,4 -d ' '  | perl -pe 's/://g' | perl -pe s'/\(|\)//g' > scores_west.txt 
 ```
 
 
 Lowest value is now for K = 9, plotting scores
 ```{r}
-scores <- read_delim("outputs/106/scores_17_19.txt", col_names = c("K", "Cross-Validation Error")) %>%
+scores <- read_delim("outputs/106/scores_west.txt", col_names = c("K", "Cross-Validation Error")) %>%
   mutate(K = as.integer(gsub("[^0-9]", "", K))) %>%
   arrange(K)
 
