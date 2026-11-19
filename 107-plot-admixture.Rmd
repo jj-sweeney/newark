@@ -99,6 +99,7 @@ PlotAdmixture("outputs/106/pruned-nwrk.4.Q",nm)
 ```
 ```{r}
 PlotAdmixture("outputs/106/pruned-nwrk.5.Q",nm)
+ggsave("outputs/107/k5.jpeg")
 ```
 Can investigate if the Cold Creek Reservoir genetics are reasonabl migrants at some point.
 
@@ -182,8 +183,8 @@ k3<-PlotAdmixture("outputs/106/pruned-nwrk.3.Q",nm)
 
 ```{r}
 ggarrange(ggplotGrob(ggarrange(panela,blank, ncol=1, heights=c(1,1.5))),
-          ggplotGrob(ggarrange(k2 + ggtitle("B") +  theme(plot.title = element_text(size=16, face="bold")) ,
-                               k3 + ggtitle("C") +  theme(plot.title = element_text(size=16, face="bold")) ,
+          ggplotGrob(ggarrange(k2 + ggtitle("K = 2") +  theme(plot.title = element_text(size=16, face="bold", hjust=0.5)) ,
+                               k3 + ggtitle("K = 3") +  theme(plot.title = element_text(size=16, face="bold", hjust=0.5)) ,
                                ncol=1, heights=c(1,1.5))),
           widths=c(1,3))
 
