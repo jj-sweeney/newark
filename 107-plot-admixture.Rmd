@@ -1,0 +1,193 @@
+---
+title: "107-plot-admixture"
+output: html_document
+date: "2026-11-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+Set up function for plotting admixture q files
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(ggpubr)
+library(grid)
+```
+
+scp outputs/106 from remote to local...
+
+need meta somehow
+```{r}
+meta<-read_csv("metadata/meta01222025.csv")
+nwrk<-read_tsv("bamlists/nwrk.names", col_names = c("GVL_Code"))
+nm<-nwrk %>% left_join(meta) %>% mutate(Region=`Tributary/Collection Location`)
+
+#set up factor for 'Region' to control plotting order
+#This is just a way to do it, it can be altered to be sensible, for use across plots. For instance, the order of "west" pops should be the same here as in their figure.
+nm$Region<-factor(nm$Region, levels=c("Cold Creek Reservoir", "NV9","NV7","NV2","NN3_North","NV6","NF6","NV5","NN3_Mid","NV1","NV16","NN4","NV12","NV17", "NV18","NV19"))          
+
+```
+
+
+
+Obtain q file that is 301 things long, looks like 'outputs/106/pruned-nwrk.3.Q'
+
+Declare function and edit
+
+```{r, echo=FALSE}
+PlotAdmixture<- function(file, meta) {
+
+q<-read_delim(file, delim=" ", col_names=FALSE)
+#Make generic colnames
+
+nums<-1:length(colnames(q))
+mynames<-paste0("Q",nums)
+
+qs<-length(colnames(q))-1
+
+colnames(q)<-mynames
+
+#Bind met and arrange 
+df<-bind_cols(q, meta) %>% arrange(Region, Q2) %>% mutate(Index=1:n())
+df$Region<-factor(df$Region, levels=unique(df$Region))
+
+rdf<-df %>% dplyr::select(Region, Index, colnames(q) ) %>% gather(key=Ancestry, value=Q, 3:(3+length(colnames(q))-1))
+
+#Make names for structure-like plot
+labels<-rdf %>% group_by(Region) %>% mutate(Start=min(Index), Stop=max(Index)) %>% 
+  select(Region,Start,Stop) %>% unique() %>% 
+  mutate(Position=round((Start+Stop)/2)) %>% ungroup() %>% unique()
+
+#Plot
+ggplot(rdf) + 
+  geom_col(aes(x=Index,y=Q, fill=Ancestry), color="NA", size = 0, width = 1) +
+  geom_segment(data=labels, x = labels$Start - 0.5, y=0, xend = labels$Start-0.5, yend=1, alpha=0.9, size=0.25) +
+  geom_segment(data=labels, x = labels$Stop[length(labels$Stop)]  + 0.5, y=0, 
+               xend= labels$Stop[length(labels$Stop)] + 0.5, yend=1,  alpha=0.9,
+               size=0.25) +
+  geom_segment(x=0+0.5, xend= labels$Stop[length(labels$Stop)]+0.5, y=1, yend=1, alpha=0.9, size=0.25) +
+  geom_segment(x=0+0.5, xend= labels$Stop[length(labels$Stop)]+0.5, y=0, yend=0, alpha=0.9, size=0.25) +
+  ylim(-0.1,1.01) +
+  xlim(-0.1, labels$Stop[length(labels$Stop)]+1) +
+  theme(panel.background = element_blank()) +
+  xlab("") +
+  ylab("Q\n") +
+  theme(legend.position = "") +
+  theme(axis.text = element_text(size=10, face="bold")) +
+  theme(axis.title.y=element_text(size=14, face="bold")) +
+  scale_x_continuous(breaks=labels$Position, labels=labels$Region) +
+  theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  #theme(axis.text.x=element_blank()) +
+  scale_fill_viridis_d(option="viridis") +
+  theme(axis.ticks.x = element_blank())
+
+}
+```
+
+```{r}
+PlotAdmixture("outputs/106/pruned-nwrk.2.Q",nm)
+```
+
+```{r}
+PlotAdmixture("outputs/106/pruned-nwrk.3.Q",nm)
+```
+```{r}
+PlotAdmixture("outputs/106/pruned-nwrk.4.Q",nm)
+```
+```{r}
+PlotAdmixture("outputs/106/pruned-nwrk.5.Q",nm)
+```
+Can investigate if the Cold Creek Reservoir genetics are reasonabl migrants at some point.
+
+
+```{r}
+scores <- read_delim("outputs/106/scores.txt", col_names = c("K", "Cross-Validation Error")) %>%
+  mutate(K = as.integer(gsub("[^0-9]", "", K))) %>%
+  arrange(K)
+
+panela<-ggplot(scores, aes(x = K, y = `Cross-Validation Error`)) +
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+  theme(panel.grid = element_blank()) +
+  scale_x_continuous(breaks = scores$K) +
+  ggtitle("A") +
+  theme(plot.title = element_text(size=16, face="bold")) +
+  theme(axis.title=element_text(size=12))
+
+```
+making a k=2 in colors I want
+```{r}
+file<-"outputs/106/pruned-nwrk.2.Q"
+meta<-nm
+
+q<-read_delim(file, delim=" ", col_names=FALSE)
+#Make generic colnames
+
+nums<-1:length(colnames(q))
+mynames<-paste0("Q",nums)
+
+qs<-length(colnames(q))-1
+
+colnames(q)<-mynames
+
+#Bind met and arrange 
+df<-bind_cols(q, meta) %>% arrange(Region, Q2) %>% mutate(Index=1:n())
+df$Region<-factor(df$Region, levels=unique(df$Region))
+
+rdf<-df %>% dplyr::select(Region, Index, colnames(q) ) %>% gather(key=Ancestry, value=Q, 3:(3+length(colnames(q))-1))
+
+#Make names for structure-like plot
+labels<-rdf %>% group_by(Region) %>% mutate(Start=min(Index), Stop=max(Index)) %>% 
+  select(Region,Start,Stop) %>% unique() %>% 
+  mutate(Position=round((Start+Stop)/2)) %>% ungroup() %>% unique()
+
+#Plot
+k2<-ggplot(rdf) + 
+  geom_col(aes(x=Index,y=Q, fill=Ancestry), color="NA", size = 0, width = 1) +
+  geom_segment(data=labels, x = labels$Start - 0.5, y=0, xend = labels$Start-0.5, yend=1, alpha=0.9, size=0.25) +
+  geom_segment(data=labels, x = labels$Stop[length(labels$Stop)]  + 0.5, y=0, 
+               xend= labels$Stop[length(labels$Stop)] + 0.5, yend=1,  alpha=0.9,
+               size=0.25) +
+  geom_segment(x=0+0.5, xend= labels$Stop[length(labels$Stop)]+0.5, y=1, yend=1, alpha=0.9, size=0.25) +
+  geom_segment(x=0+0.5, xend= labels$Stop[length(labels$Stop)]+0.5, y=0, yend=0, alpha=0.9, size=0.25) +
+  ylim(-0.1,1.01) +
+  xlim(-0.1, labels$Stop[length(labels$Stop)]+1) +
+  theme(panel.background = element_blank()) +
+  xlab("") +
+  ylab("Q\n") +
+  theme(legend.position = "") +
+  theme(axis.text = element_text(size=10, face="bold")) +
+  theme(axis.title.y=element_text(size=14, face="bold")) +
+  scale_x_continuous(breaks=labels$Position, labels=labels$Region) +
+ # theme(axis.text.x = element_text(angle=45, hjust=1)) +
+  theme(axis.text.x=element_blank()) +
+  scale_fill_viridis_d(option="viridis", direction = -1) +
+  theme(axis.ticks.x = element_blank())
+k2
+```
+
+creating a blank for plotting
+
+```{r}
+blank <- grid.rect(gp=gpar(col="white"))
+```
+
+```{r}
+k3<-PlotAdmixture("outputs/106/pruned-nwrk.3.Q",nm)
+```
+
+```{r}
+ggarrange(ggplotGrob(ggarrange(panela,blank, ncol=1, heights=c(1,1.5))),
+          ggplotGrob(ggarrange(k2 + ggtitle("B") +  theme(plot.title = element_text(size=16, face="bold")) ,
+                               k3 + ggtitle("C") +  theme(plot.title = element_text(size=16, face="bold")) ,
+                               ncol=1, heights=c(1,1.5))),
+          widths=c(1,3))
+
+ggsave("outputs/107/newarkensis-ks.pdf", width = 11, height=6)
+ggsave("outputs/107/newarkensis-ks.jpeg", width = 11, height=6)
+
+```
