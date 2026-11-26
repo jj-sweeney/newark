@@ -10,7 +10,8 @@
 
 
 module load bcftools
- angsd -nthreads 12 \
+
+angsd -nthreads 12 \
 -minInd 163 -bam bamlists/181.bamlist -out outputs/102/snps-05 \
 -ref /home/jsweeney/genomes/genome.fasta \
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \

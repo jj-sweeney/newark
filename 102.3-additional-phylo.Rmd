@@ -45,4 +45,10 @@ bcftools reheader --samples bamlists/181.names outputs/102/snps-05-recode.vcf.gz
 bcftools +prune -n 1 -N rand --random-seed 123 -w 50000bp \
   outputs/102/snps-10-renamed.vcf.gz -Oz -o outputs/102/snps-pruned-10.vcf.gz
 '
+```
+
+see 102.4-phylo-calls.slurm
+
+sbatch 102.4-phylo-calls.slurm
+
 
