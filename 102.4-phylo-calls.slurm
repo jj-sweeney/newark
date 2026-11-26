@@ -2,7 +2,7 @@
 #SBATCH --job-name=angsd
 #SBATCH --partition=bmh
 #SBATCH --account=millermrgrp
-#SBATCH --time=08:00:00
+#SBATCH --time=15:00:00
 #SBATCH --mem=256G
 #SBATCH --cpus-per-task=12
 
