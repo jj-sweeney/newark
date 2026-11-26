@@ -16,13 +16,29 @@ library(ggtree)
 
 Set up broader phylogeny to test placement of newarkensis
 
-Trying: sampled_nwrk_ids 
+Trying: sampled_nwrk_ids see 102.2 for generation of m181.csv
 
 ```{r}
 m181<-read_csv("metadata/m181.csv") %>% relocate(Species, Vicinity,`Tributary/Collection Location`,GVL_Code)
 
 m181 %>% group_by(Species) %>% summarize(Count=n())
+
+m181 %>% select(Path) %>% write_tsv("bamlists/181.bamlist", col_names = FALSE)
+m181 %>% select(GVL_Code) %>% write_tsv("bamlists/181.names", col_names = FALSE)
+
 ```
 
 
-Set up calls
+Set up calls, see run_angsd.sh
+
+```{sh, eval=FALSE}
+
+srun -p bmh -t 12:00:00 --mem=128GB --cpus-per-task=12 bash -c '
+ angsd -nthreads 12 \
+-minInd 163 -bam bamlists/181.bamlist -out outputs/102/snps05 \
+-ref /home/jsweeney/genomes/genome.fasta -r JBECYN010000001.1 \
+-minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
+-doGeno 2 -doPost 1 -postCutoff 0.95 -doVcf 1 \ 
+> outputs/102/snps-05.out 2> outputs/102/snps-05.err
+'
+
