@@ -52,6 +52,12 @@ m_nwrk_sampled <- m_nwrk %>%
   ungroup()
 
 sampled_nwrk_ids <- m_nwrk_sampled$GVL_Code
+
+#dowsamping m_fil
+outgroups<-m_fil %>% filter(Species != "newarkensis")
+ingroup<-m_fil %>% filter(Species == "newarkensis") %>% filter(GVL_Code %in% m_nwrk_sampled$GVL_Code)
+
+write_csv(bind_rows(outgroups,ingroup), file="metadata/m181.csv")
 ```
 
 convert vcf to phylip

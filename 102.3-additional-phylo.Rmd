@@ -1,0 +1,28 @@
+---
+title: "102.3-additional-phylo"
+output: html_document
+date: "2026-11-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+```{r}
+library(tidyverse)
+library(ggtree)
+```
+
+Set up broader phylogeny to test placement of newarkensis
+
+Trying: sampled_nwrk_ids 
+
+```{r}
+m181<-read_csv("metadata/m181.csv") %>% relocate(Species, Vicinity,`Tributary/Collection Location`,GVL_Code)
+
+m181 %>% group_by(Species) %>% summarize(Count=n())
+```
+
+
+Set up calls
