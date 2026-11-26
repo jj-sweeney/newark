@@ -2,6 +2,7 @@ outputs/
 genome/
 data/
 bams/
+logs
 *.html
 
 *DS_Store

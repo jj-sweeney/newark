@@ -1,10 +1,13 @@
 #!/bin/bash
-#SBATCH --job-name=angsd
+#SBATCH --job-name=angsd-phylo
 #SBATCH --partition=bmh
 #SBATCH --account=millermrgrp
 #SBATCH --time=15:00:00
 #SBATCH --mem=256G
 #SBATCH --cpus-per-task=12
+#SBATCH --output=logs/%x_%j.out
+#SBATCH --error=logs/%x_%j.err
+
 
 module load bcftools
  angsd -nthreads 12 \
