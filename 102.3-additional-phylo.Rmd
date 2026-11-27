@@ -40,15 +40,106 @@ srun -p bmh -t 1:00:00 --mem=128GB --cpus-per-task=12 bash -c '
 -minMaf 0.05 -minMapQ 20 -minQ 20 -GL 1 -doMajorMinor 1 -doMaf 1 -SNP_pval 1e-6 \
 -doGeno 2 -doPost 1 -postCutoff 0.95 -doPlink 2 \
 > outputs/102/snps-05.out 2> outputs/102/snps-05.err 
+
 plink --tfile outputs/102/snps-05 --recode vcf bgz --out outputs/102/snps-05-recode --keep-allele-order --allow-extra-chr
+
 bcftools reheader --samples bamlists/181.names outputs/102/snps-05-recode.vcf.gz | bcftools +fill-tags -Ou -- -t MAF,F_MISSING | bcftools view -i "F_MISSING < 0.10 && MAF > 0.10" -Oz -o  outputs/102/snps-10-renamed.vcf.gz
+
 bcftools +prune -n 1 -N rand --random-seed 123 -w 50000bp \
   outputs/102/snps-10-renamed.vcf.gz -Oz -o outputs/102/snps-pruned-10.vcf.gz
+  
+bcftools reheader --samples bamlists/181.names outputs/102/snps-05-recode.vcf.gz | bcftools +fill-tags -Ou -- -t MAF,F_MISSING | bcftools view -i "F_MISSING < 0.10 && MAF > 0.05" -Oz -o  outputs/102/snps-05-renamed.vcf.gz
+
+bcftools +prune -n 1 -N rand --random-seed 123 -w 50000bp \
+  outputs/102/snps-05-renamed.vcf.gz -Oz -o outputs/102/snps-pruned-05.vcf.gz
 '
 ```
 
 see 102.4-phylo-calls.slurm
 
 sbatch 102.4-phylo-calls.slurm
+
+Check phylogenetic signal in 0.10 MAF calls
+
+These have a lot of missing data
+CHS23_07
+CHS23_09
+RCK11_16
+NVIV15
+NVIV8
+NVIV14
+NVIV18
+NV17_24
+These have at least a bit: 0.10
+OHC11_13
+CHS23_12
+CHS23_07
+CHS23_09
+KNY05_41
+RCK11_16
+NVIV15
+NVIV8
+NVIV14
+NVIV2
+NVIV18
+CCRN02
+CCRN18
+CCRN13
+NV17_24
+
+```{sh, eval=FALSE}
+
+#1 checking missingness at an individual level
+bcftools stats -s - snps-pruned-10.vcf.gz | awk '
+  /^PSC/ {
+    # Column 3: Sample name
+    # Column 4: nRefHom, Column 5: nNonRefHom, Column 6: nHets, Column 14: nMissing
+    called = $4 + $5 + $6
+    missing = $14
+    total = called + missing
+    if (total > 0 && (missing / total) > 0.10) {
+      print $3
+    }
+  }
+' > missing10.txt
+
+bcftools view -S ^missing10.txt snps-pruned-10.vcf.gz -Oz -o snps-pruned-10-drop.vcf.gz
+
+bcftools stats -s - snps-pruned-05.vcf.gz | awk '
+  /^PSC/ {
+    # Column 3: Sample name
+    # Column 4: nRefHom, Column 5: nNonRefHom, Column 6: nHets, Column 14: nMissing
+    called = $4 + $5 + $6
+    missing = $14
+    total = called + missing
+    if (total > 0 && (missing / total) > 0.10) {
+      print $3
+    }
+  }
+' > missing10-snps05.txt
+
+bcftools view -S ^missing10-snps05.txt snps-pruned-05.vcf.gz -Oz -o snps-pruned-05-drop.vcf.gz
+
+
+conda activate py2
+~/github/mccloud-rrt/vcf2phylip.py -i snps-pruned-10.vcf.gz
+~/github/mccloud-rrt/vcf2phylip.py -i snps-pruned-10-drop.vcf.gz
+~/github/mccloud-rrt/vcf2phylip.py -i snps-pruned-05-drop.vcf.gz
+
+conda deactivate
+
+#compare resulting phylogenies
+iqtree2  -nt AUTO -m MFP+ASC -bb 1000 -s snps-pruned-10.min4.phy --seqtype DNA --redo
+iqtree2  -nt AUTO -m MFP+ASC -bb 10000 -s snps-pruned-10.min4.phy.varsites.phy --seqtype DNA --redo
+
+iqtree2  -nt AUTO -m MFP+ASC -bb 1000 -s snps-pruned-10-drop.min4.phy --seqtype DNA --redo
+iqtree2  -nt AUTO -m MFP+ASC -bb 10000 -s snps-pruned-10-drop.min4.phy.varsites.phy --seqtype DNA --redo
+
+iqtree2  -nt AUTO -m MFP+ASC -bb 1000 -s snps-pruned-05-drop.min4.phy --seqtype DNA --redo
+iqtree2  -nt AUTO -m MFP+ASC -bb 10000 -s snps-pruned-05-drop.min4.phy.varsites.phy --seqtype DNA --redo
+```
+
+
+```
 
 
